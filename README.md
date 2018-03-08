@@ -22,7 +22,7 @@ final RMQConnectionConfig connectionConfig = new RMQConnectionConfig.Builder()
 The queue that stores the messages within the [Sparks IoT platform](https://sparks.io) defines a TTL (time-to-live) for
 each message of 10000. Optional queue arguments are supported in flink by extending the
 [RMQSource class](https://ci.apache.org/projects/flink/flink-docs-master/api/java/org/apache/flink/streaming/connectors/rabbitmq/RMQSource.html).
-For this reason under the *net.sparkworks.util* package the RBQueue class extends the [RMQSource class](https://ci.apache.org/projects/flink/flink-docs-master/api/java/org/apache/flink/streaming/connectors/rabbitmq/RMQSource.html)
+For this reason under the *net.sparkworks.util* package the [RBQueue class](src/net/sparkworks/util/RBQueue.java) extends the [RMQSource class](https://ci.apache.org/projects/flink/flink-docs-master/api/java/org/apache/flink/streaming/connectors/rabbitmq/RMQSource.html) 
 by overwritting the *setupQueue* method as follows:
 
 ```java
@@ -57,9 +57,9 @@ device urn,value,timestamp
 ```
 
 As soon as data are arriving on the flink, the first step is to use a map transformation and convert them into a POJO object.
-The *SensorData* class is defined for this purpose under the *net.sparkworks.model* package.
+The [SensorData]](src/net/sparkworks/model/SensorData.java) class is defined for this purpose under the *net.sparkworks.model* package.
 
-The transformation step is specified within the *SensorDataMapFunction* class that resides with the *net.sparkworks.functions* package.
+The transformation step is specified within the [SensorDataMapFunction](src/net/sparkworks/functions/SensorDataMapFunction.java) class that resides with the *net.sparkworks.functions* package.
 The map transformation is applied over the data stream as follows:
 
 ```java
@@ -69,12 +69,12 @@ DataStream<SensorData> dataStream = // convert RabbitMQ messages to SensorData
 
 # A simple message listener
 
-Within the *net.sparkworks.stream* package, the *StreamListener* class defines a simple example for retrieving data from the
+Within the *net.sparkworks.stream* package, the [StreamListener](src/net/sparkworks/stream/StreamListener.java) class defines a simple example for retrieving data from the
 RabbitMQ queue and applying the above transformation on the data.
 
 # Aggregation of IoT data using a window
 
-The next example aggregates the IoT data based on a Window of 5 minutes. The code can be found within the *StreamProcessor* class.
+The next example aggregates the IoT data based on a Window of 5 minutes. The code can be found within the [StreamProcessor](src/net/sparkworks/stream/StreamProcessor.java) class.
 Data arriving from the same device (i.e., with the same device urn) are grouped together so that an aggregate fuction is applied on them.
 To this end a KeyedStream is defined as follows:
 
