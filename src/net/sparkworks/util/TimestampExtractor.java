@@ -17,13 +17,11 @@ public class TimestampExtractor
      */
     private long currentTimestamp = Long.MIN_VALUE;
 
-    @Override
     public long extractTimestamp(SensorData element, long previousElementTimestamp) {
         currentTimestamp = element.getTimestamp();
         return element.getTimestamp();
     }
 
-    @Override
     public final Watermark getCurrentWatermark() {
         return new Watermark(currentTimestamp);
     }

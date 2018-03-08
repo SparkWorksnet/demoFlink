@@ -13,6 +13,8 @@ public interface SparkConfiguration {
 
     public final String brokerVHost = "/";
 
+    public final String queue = "ichatz-annotated-readings";
+
     public final String username = "username";
 
     public final String password = "password";

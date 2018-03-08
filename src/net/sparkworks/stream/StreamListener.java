@@ -36,7 +36,7 @@ public class StreamListener {
         final DataStream<String> rawStream = env
                 .addSource(new RBQueue<String>(
                         connectionConfig,            // config for the RabbitMQ connection
-                        "ichatz-annotated-readings", // name of the RabbitMQ queue to consume
+                        SparkConfiguration.queue, // name of the RabbitMQ queue to consume
                         true,                        // use correlation ids; can be false if only at-least-once is required
                         new SimpleStringSchema())); // deserialization schema to turn messages into Java objects
 

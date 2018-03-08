@@ -1,26 +1,38 @@
 package net.sparkworks.stream;
 
 import net.sparkworks.SparkConfiguration;
+import net.sparkworks.functions.ETLApply;
 import net.sparkworks.functions.SensorDataAverageReduce;
 import net.sparkworks.functions.SensorDataMapFunction;
 import net.sparkworks.model.SensorData;
 import net.sparkworks.util.RBQueue;
-import org.apache.flink.api.common.functions.ReduceFunction;
+import net.sparkworks.util.TimestampExtractor;
 import org.apache.flink.api.java.functions.KeySelector;
+import org.apache.flink.streaming.api.TimeCharacteristic;
 import org.apache.flink.streaming.api.datastream.DataStream;
 import org.apache.flink.streaming.api.datastream.KeyedStream;
+import org.apache.flink.streaming.api.datastream.WindowedStream;
 import org.apache.flink.streaming.api.environment.StreamExecutionEnvironment;
+import org.apache.flink.streaming.api.windowing.assigners.TumblingEventTimeWindows;
 import org.apache.flink.streaming.api.windowing.time.Time;
+import org.apache.flink.streaming.api.windowing.windows.TimeWindow;
+import org.apache.flink.streaming.api.windowing.windows.Window;
 import org.apache.flink.streaming.connectors.rabbitmq.common.RMQConnectionConfig;
 import org.apache.flink.streaming.util.serialization.SimpleStringSchema;
 
 /**
  * A simple Flink stream processing engine connecting to the SparkWorks message broker.
  * Groups data based on the URN and produces an average value over all values received within a window of 5 minutes.
+ * Like WindowProcessor, the timestamp provided by the IoT domain is used for the computation
+ * of the windows.
+ * This class provides an ETL operation that is implemented using the APPLY operator.
+ *
+ * <p>Note that this function requires that all data in the windows is buffered until the window
+ * is evaluated, as the function provides no means of incremental aggregation.
  *
  * @author ichatz@gmail.com
  */
-public class StreamProcessor {
+public class WindowETLProcessor {
 
     public static void main(String[] args) throws Exception {
 
@@ -28,6 +40,7 @@ public class StreamProcessor {
         // A local environment will cause execution in the current JVM,
         // a remote environment will cause execution on a remote cluster installation.
         final StreamExecutionEnvironment env = StreamExecutionEnvironment.getExecutionEnvironment();
+        env.setStreamTimeCharacteristic(TimeCharacteristic.EventTime);
 
         // Setup the connection settings to the RabbitMQ broker
         final RMQConnectionConfig connectionConfig = new RMQConnectionConfig.Builder()
@@ -50,8 +63,12 @@ public class StreamProcessor {
         final DataStream<SensorData> dataStream = rawStream
                 .map(new SensorDataMapFunction());
 
+        // Assign timestamps
+        final DataStream<SensorData> timedStream =
+                dataStream.assignTimestampsAndWatermarks(new TimestampExtractor());
+
         // Key messages based on the URN
-        final KeyedStream<SensorData, String> keyedStream = dataStream
+        final KeyedStream<SensorData, String> keyedStream = timedStream
                 .keyBy(new KeySelector<SensorData, String>() {
 
                     public String getKey(SensorData value) {
@@ -59,15 +76,18 @@ public class StreamProcessor {
                     }
                 });
 
-        // Define the window and apply the reduce transformation
-        DataStream resultStream = keyedStream
-                .timeWindow(Time.seconds(10))
-                .reduce(new SensorDataAverageReduce());
+        // Define the window
+        final WindowedStream<SensorData, String, TimeWindow> resultStream = keyedStream
+                .window(TumblingEventTimeWindows.of(Time.seconds(5)));
+
+        // Execute the ETL for each tumbling window of the grouped values
+        final DataStream<SensorData> finalStream = resultStream.sum(1);
+//                .apply(new ETLApply());
 
         // print the results with a single thread, rather than in parallel
-        resultStream.print().setParallelism(1);
+        finalStream.print().setParallelism(1);
 
-        env.execute("SparkWorks Stream Processor");
+        env.execute("SparkWorks Window ETL Processor");
     }
 
 }
