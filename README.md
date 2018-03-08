@@ -57,7 +57,7 @@ device urn,value,timestamp
 ```
 
 As soon as data are arriving on the flink, the first step is to use a map transformation and convert them into a POJO object.
-The [SensorData]](src/net/sparkworks/model/SensorData.java) class is defined for this purpose under the *net.sparkworks.model* package.
+The [SensorData](src/net/sparkworks/model/SensorData.java) class is defined for this purpose under the *net.sparkworks.model* package.
 
 The transformation step is specified within the [SensorDataMapFunction](src/net/sparkworks/functions/SensorDataMapFunction.java) class that resides with the *net.sparkworks.functions* package.
 The map transformation is applied over the data stream as follows:
