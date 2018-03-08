@@ -1,5 +1,6 @@
 package net.sparkworks.stream;
 
+import net.sparkworks.functions.SensorDataAverageReduce;
 import net.sparkworks.functions.SensorDataMapFunction;
 import net.sparkworks.model.SensorData;
 import net.sparkworks.util.RBQueue;
@@ -31,8 +32,8 @@ public class StreamProcessor {
         final RMQConnectionConfig connectionConfig = new RMQConnectionConfig.Builder()
                 .setHost("broker.sparkworks.net")
                 .setPort(5672)
-                .setUserName("username")
-                .setPassword("password")
+                .setUserName("ichatz")
+                .setPassword("HKgpOTFGWygv")
                 .setVirtualHost("/")
                 .build();
 
@@ -57,19 +58,10 @@ public class StreamProcessor {
                     }
                 });
 
-        // Assign timestamps
+        // Define the window and apply the reduce transformation
         DataStream resultStream = keyedStream
                 .timeWindow(Time.minutes(5))
-                .reduce(new ReduceFunction<SensorData>() {
-
-                    public SensorData reduce(SensorData a, SensorData b) {
-                        SensorData value = new SensorData();
-                        value.setUrn(a.getUrn());
-                        value.setValue((a.getValue()+ b.getValue()) / 2);
-                        return value;
-                    }
-                });
-
+                .reduce(new SensorDataAverageReduce());
 
         // print the results with a single thread, rather than in parallel
         resultStream.print().setParallelism(1);

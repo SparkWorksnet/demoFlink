@@ -88,3 +88,24 @@ KeyedStream<SensorData, String> keyedStream = dataStream
     });
 ```
 
+Given the grouping of the stream of data based on the device urn,
+the final aggregation is defined within the *net.sparkworks.functions* package,
+the [SensorDataAverageReduce](src/net/sparkworks/functions/SensorDataAverageReduce.java) class.
+The aggregation is essentially a reduce transformation step where an average overall the values collected is generated.
+
+```java
+public SensorData reduce(SensorData a, SensorData b) {
+    SensorData value = new SensorData();
+    value.setUrn(a.getUrn());
+    value.setValue((a.getValue() + b.getValue()) / 2);
+    return value;
+}
+```
+
+Based on the above map/reduce transformation, the final step is to define the window and finalize the processing:
+
+```java
+DataStream resultStream = keyedStream
+        .timeWindow(Time.minutes(5))
+        .reduce(new SensorDataAverageReduce());
+```
