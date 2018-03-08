@@ -1,18 +1,20 @@
 package net.sparkworks.stream;
 
-import org.apache.flink.api.common.functions.FlatMapFunction;
+import net.sparkworks.functions.SensorDataMapFunction;
+import net.sparkworks.model.SensorData;
+import net.sparkworks.util.RBQueue;
 import org.apache.flink.api.common.functions.ReduceFunction;
-import org.apache.flink.api.java.tuple.Tuple2;
+import org.apache.flink.api.java.functions.KeySelector;
 import org.apache.flink.streaming.api.datastream.DataStream;
+import org.apache.flink.streaming.api.datastream.KeyedStream;
 import org.apache.flink.streaming.api.environment.StreamExecutionEnvironment;
 import org.apache.flink.streaming.api.windowing.time.Time;
-import org.apache.flink.streaming.connectors.rabbitmq.RMQSource;
 import org.apache.flink.streaming.connectors.rabbitmq.common.RMQConnectionConfig;
 import org.apache.flink.streaming.util.serialization.SimpleStringSchema;
-import org.apache.flink.util.Collector;
 
 /**
  * A simple Flink stream processing engine connecting to the SparkWorks message broker.
+ * Groups data based on the URN and produces an average value over all values received within a window of 5 minutes.
  *
  * @author ichatz@gmail.com
  */
@@ -35,37 +37,44 @@ public class StreamProcessor {
                 .build();
 
         final DataStream<String> rawStream = env
-                .addSource(new RMQSource<String>(
+                .addSource(new RBQueue<String>(
                         connectionConfig,            // config for the RabbitMQ connection
                         "ichatz-annotated-readings", // name of the RabbitMQ queue to consume
                         true,                        // use correlation ids; can be false if only at-least-once is required
-                        new SimpleStringSchema())); // deserialization schema to turn messages into Java objects
+                        new SimpleStringSchema()))
+                .setParallelism(1); // deserialization schema to turn messages into Java objects
 
-        final DataStream<Tuple2<String, Integer>> procStream = rawStream
-                .flatMap(new FlatMapFunction<String, Tuple2<String, Integer>>() {
+        // convert RabbitMQ messages to SensorData
+        final DataStream<SensorData> dataStream = rawStream
+                .map(new SensorDataMapFunction());
 
-                    public void flatMap(String value, Collector<Tuple2<String, Integer>> out) {
-                        final String[] items = value.split(",");
-                        // extract value
-                        final String txtValue = items[1];
-                        try {
-                            final int intValue = Integer.parseInt(txtValue);
+        // Key messages based on the URN
+        final KeyedStream<SensorData, String> keyedStream = dataStream
+                .keyBy(new KeySelector<SensorData, String>() {
 
-                            out.collect(new Tuple2(items[0], intValue));
-                        } catch (Exception ex) {
-                            // either district does not exist or it is not an integer
-                            // simply ignore
-                        }
+                    public String getKey(SensorData value) {
+                        return value.getUrn();
                     }
-                })
-                .keyBy(0)
-                .timeWindow(Time.seconds(5))
-                .sum(1);
+                });
+
+        // Assign timestamps
+        DataStream resultStream = keyedStream
+                .timeWindow(Time.minutes(5))
+                .reduce(new ReduceFunction<SensorData>() {
+
+                    public SensorData reduce(SensorData a, SensorData b) {
+                        SensorData value = new SensorData();
+                        value.setUrn(a.getUrn());
+                        value.setValue((a.getValue()+ b.getValue()) / 2);
+                        return value;
+                    }
+                });
+
 
         // print the results with a single thread, rather than in parallel
-        procStream.print().setParallelism(1);
+        resultStream.print().setParallelism(1);
 
-        env.execute("SparkWorks Stream Processing Demo");
+        env.execute("SparkWorks Stream Processor");
     }
 
 }
