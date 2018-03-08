@@ -10,7 +10,7 @@ Using Flink's terminology, data are retrieved using a [Flink RabbitMQ connector]
 The connection parameters are declared using a RMQConnectionConfig object as follows:
 
 ```java
-final RMQConnectionConfig connectionConfig = new RMQConnectionConfig.Builder()
+RMQConnectionConfig connectionConfig = new RMQConnectionConfig.Builder()
         .setHost("broker.sparkworks.net")
         .setPort(5672)
         .setUserName("username")
@@ -26,7 +26,7 @@ For this reason under the *net.sparkworks.util* package the [RBQueue class](src/
 by overwritting the *setupQueue* method as follows:
 
 ```java
-protected void setupQueue() throws IOException {
+void setupQueue() throws IOException {
     Map args = new HashMap();
     args.put("x-message-ttl", 10000);
 
@@ -72,6 +72,8 @@ DataStream<SensorData> dataStream = // convert RabbitMQ messages to SensorData
 Within the *net.sparkworks.stream* package, the [StreamListener](src/net/sparkworks/stream/StreamListener.java) class defines a simple example for retrieving data from the
 RabbitMQ queue and applying the above transformation on the data.
 
+The flink job will continuously output the sensor values received from the data stream.
+
 # Aggregation of IoT data using a window
 
 The next example aggregates the IoT data based on a Window of 5 minutes. The code can be found within the [StreamProcessor](src/net/sparkworks/stream/StreamProcessor.java) class.
@@ -94,7 +96,7 @@ the [SensorDataAverageReduce](src/net/sparkworks/functions/SensorDataAverageRedu
 The aggregation is essentially a reduce transformation step where an average overall the values collected is generated.
 
 ```java
-public SensorData reduce(SensorData a, SensorData b) {
+SensorData reduce(SensorData a, SensorData b) {
     SensorData value = new SensorData();
     value.setUrn(a.getUrn());
     value.setValue((a.getValue() + b.getValue()) / 2);
@@ -102,10 +104,67 @@ public SensorData reduce(SensorData a, SensorData b) {
 }
 ```
 
-Based on the above map/reduce transformation, the final step is to define the window and finalize the processing:
+Based on the above map/reduce transformation, the final step is to define the window of 5 minutes and finalize the processing:
 
 ```java
 DataStream resultStream = keyedStream
         .timeWindow(Time.minutes(5))
         .reduce(new SensorDataAverageReduce());
 ```
+
+Every 5 minutes the flink job will output the aggregated values over the sensor values retrieved during this period of time.
+
+# Window processing based on event timestamps
+
+Flink supports different [notions of time in streaming programming](https://ci.apache.org/projects/flink/flink-docs-release-1.4/dev/event_time.html).
+In the above example the time windows are computed using the system clock of the machines that run the respective operator.
+The five minute processing time window will include all data that arrived at a specific operator between the times
+when the system clock indicated the five minute period. This is known as *processing time*, and it is the simplest
+notion of time and requires no coordination between streams and machines.
+It provides the best performance and the lowest latency.
+However, in IoT based distributed and asynchronous environments processing time does not provide determinism,
+because it is susceptible to the speed at which records arrive in the system (for example from the message queue),
+and to the speed at which the records flow between operators inside the system.
+
+In this example the *event time* is used to process the time-based operators. The timestamp provided by the IoT devices
+is already embedded on the RabbitMQ messages (see above) before they enter Flink.
+This event timestamp is extracted from the record and used by Flink to compute the time windows.
+In this example, a five minute time window will contain all records that carry an event timestamp that falls into that
+five minute period, regardless of when the records arrive, and in what order they arrive.
+
+Selecting the *event time* approach for time-based operator first requires to set a environment level parameter as follows:
+
+```java
+env.setStreamTimeCharacteristic(TimeCharacteristic.EventTime);
+```
+
+Event time gives correct results even on out-of-order events, late events, or on replays of data from backups or persistent logs.
+In event time, the progress of time depends on the data, not on any wall clocks.
+Event time programs must specify how to generate Event Time Watermarks,
+which is the mechanism that signals progress in event time.
+
+In order to work with event time, Flink needs to know the events’ timestamps, meaning each element in the stream needs
+to have its event timestamp assigned. For this purpose within the *net.sparkworks.util* package,
+the [TimestampExtractor](src/net/sparkworks/util/TimestampExtractor.java) class is defined.
+
+```java
+long currentTimestamp = Long.MIN_VALUE;
+
+long extractTimestamp(SensorData element, long previousElementTimestamp) {
+    currentTimestamp = element.getTimestamp();
+    return element.getTimestamp();
+}
+
+public final Watermark getCurrentWatermark() {
+    return new Watermark(currentTimestamp);
+}
+```
+
+Therefore, after applying the first map transformation ([SensorDataMapFunction](src/net/sparkworks/functions/SensorDataMapFunction.java))
+that parses the messages arriving on the RabbitMQ queue, the timestamps are extracted as follows:
+
+```java
+DataStream<SensorData> timedStream =
+    dataStream.assignTimestampsAndWatermarks(new TimestampExtractor());
+```
+

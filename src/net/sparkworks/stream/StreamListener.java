@@ -1,5 +1,6 @@
 package net.sparkworks.stream;
 
+import net.sparkworks.SparkConfiguration;
 import net.sparkworks.functions.SensorDataMapFunction;
 import net.sparkworks.model.SensorData;
 import net.sparkworks.util.RBQueue;
@@ -25,11 +26,11 @@ public class StreamListener {
 
         // Setup the connection settings to the RabbitMQ broker
         final RMQConnectionConfig connectionConfig = new RMQConnectionConfig.Builder()
-                .setHost("broker.sparkworks.net")
-                .setPort(5672)
-                .setUserName("username")
-                .setPassword("password")
-                .setVirtualHost("/")
+                .setHost(SparkConfiguration.brokerHost)
+                .setPort(SparkConfiguration.brokerPort)
+                .setUserName(SparkConfiguration.username)
+                .setPassword(SparkConfiguration.password)
+                .setVirtualHost(SparkConfiguration.brokerVHost)
                 .build();
 
         final DataStream<String> rawStream = env

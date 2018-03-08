@@ -1,5 +1,7 @@
 package net.sparkworks.model;
 
+import java.util.Date;
+
 /**
  * POJO object for a SensorData single value.
  *
@@ -42,6 +44,7 @@ public class SensorData {
         return "SensorData{" +
                 "urn='" + urn + '\'' +
                 ", value=" + value +
+                ", time=" + new Date(timestamp) +
                 '}';
     }
 }
