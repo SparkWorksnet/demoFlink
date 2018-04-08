@@ -1,4 +1,4 @@
-The repository includes a collection of examples for stream processing of dat arriving from IoT.
+The repository includes a collection of examples for stream processing of data arriving from IoT.
 Data are collected based on a [RabbitMQ](https://www.rabbitmq.com/) queue and they are processed by [Apache Flink](https://flink.apache.org/).
 The code is in JAVA.
 
