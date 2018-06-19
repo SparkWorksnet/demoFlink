@@ -15,8 +15,8 @@ public interface SparkConfiguration {
 
     public final String queue = "ichatz-annotated-readings";
 
-    public final String username = "ichatz";
+    public final String username = "username";
 
-    public final String password = "j2pewqcK4kH9AaDQkozx";
+    public final String password = "password";
 
 }
