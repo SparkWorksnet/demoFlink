@@ -4,6 +4,7 @@ import net.sparkworks.SparkConfiguration;
 import net.sparkworks.functions.ETLApply;
 import net.sparkworks.functions.SensorDataAverageReduce;
 import net.sparkworks.functions.SensorDataMapFunction;
+import net.sparkworks.functions.TimestampMapFunction;
 import net.sparkworks.model.SensorData;
 import net.sparkworks.util.RBQueue;
 import net.sparkworks.util.TimestampExtractor;
@@ -76,13 +77,23 @@ public class WindowETLProcessor {
                     }
                 });
 
+        final int windowMinutes = 5;
+
         // Define the window
         final WindowedStream<SensorData, String, TimeWindow> resultStream = keyedStream
-                .window(TumblingEventTimeWindows.of(Time.seconds(5)));
+                .window(TumblingEventTimeWindows.of(Time.minutes(windowMinutes)))
+                .allowedLateness(Time.minutes(1));
 
         // Execute the ETL for each tumbling window of the grouped values
-        final DataStream<SensorData> finalStream = resultStream.sum(1);
+        final DataStream<SensorData> reducedStream = resultStream.reduce(new SensorDataAverageReduce());
 //                .apply(new ETLApply());
+
+        final TimestampMapFunction tmfunc = new TimestampMapFunction();
+        tmfunc.setWindowMinutes(windowMinutes);
+
+        // Final transformation to set the timestamp to the start of the window
+        final DataStream<SensorData> finalStream = reducedStream.map(tmfunc);
+
 
         // print the results with a single thread, rather than in parallel
         finalStream.print().setParallelism(1);

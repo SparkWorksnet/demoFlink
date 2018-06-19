@@ -3,9 +3,11 @@ package net.sparkworks.stream;
 import net.sparkworks.SparkConfiguration;
 import net.sparkworks.functions.SensorDataAverageReduce;
 import net.sparkworks.functions.SensorDataMapFunction;
+import net.sparkworks.functions.TimestampMapFunction;
 import net.sparkworks.model.SensorData;
 import net.sparkworks.util.RBQueue;
 import net.sparkworks.util.TimestampExtractor;
+import org.apache.flink.api.common.functions.MapFunction;
 import org.apache.flink.api.java.functions.KeySelector;
 import org.apache.flink.streaming.api.TimeCharacteristic;
 import org.apache.flink.streaming.api.datastream.DataStream;
@@ -14,6 +16,9 @@ import org.apache.flink.streaming.api.environment.StreamExecutionEnvironment;
 import org.apache.flink.streaming.api.windowing.time.Time;
 import org.apache.flink.streaming.connectors.rabbitmq.common.RMQConnectionConfig;
 import org.apache.flink.streaming.util.serialization.SimpleStringSchema;
+
+import java.util.Calendar;
+import java.util.Date;
 
 /**
  * A simple Flink stream processing engine connecting to the SparkWorks message broker.
@@ -67,13 +72,21 @@ public class WindowProcessor {
                     }
                 });
 
+        final int windowMinutes = 1;
+
         // Define the window and apply the reduce transformation
-        final DataStream resultStream = keyedStream
-                .timeWindow(Time.seconds(10))
+        final DataStream<SensorData> resultStream = keyedStream
+                .timeWindow(Time.seconds(windowMinutes * 60))
                 .reduce(new SensorDataAverageReduce());
 
+        final TimestampMapFunction tmfunc = new TimestampMapFunction();
+        tmfunc.setWindowMinutes(windowMinutes);
+
+        // Final transformation to set the timestamp to the start of the window
+        final DataStream<SensorData> finalStream = resultStream.map(tmfunc);
+
         // print the results with a single thread, rather than in parallel
-        resultStream.print().setParallelism(1);
+        finalStream.print().setParallelism(1);
 
         env.execute("SparkWorks Window Processor");
     }
