@@ -20,12 +20,8 @@ public class RMQOut<T> extends RMQSink<T> {
     @Override
     protected void setupQueue() throws IOException {
         final Map args = new HashMap();
-        args.put("x-message-ttl", 10000);
-
-        this.channel.queueDeclare(this.queueName,
-                true,
-                false,
-                false, args);
+        args.put("x-message-ttl", 60000);
+        this.channel.exchangeDeclare(this.queueName, "topic", true);
     }
 
 }

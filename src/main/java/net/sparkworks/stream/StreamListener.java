@@ -3,6 +3,8 @@ package net.sparkworks.stream;
 import net.sparkworks.SparkConfiguration;
 import net.sparkworks.functions.SensorDataMapFunction;
 import net.sparkworks.model.SensorData;
+import net.sparkworks.out.RMQOut;
+import net.sparkworks.serialization.SensorDataSerializationSchema;
 import net.sparkworks.util.RBQueue;
 import org.apache.flink.streaming.api.datastream.DataStream;
 import org.apache.flink.streaming.api.environment.StreamExecutionEnvironment;
@@ -43,6 +45,10 @@ public class StreamListener {
         final DataStream<SensorData> dataStream = // convert RabbitMQ messages to SensorData
                 rawStream.map(new SensorDataMapFunction());
 
+        if (SparkConfiguration.doOutput) {
+            dataStream.addSink(new RMQOut<SensorData>(connectionConfig, SparkConfiguration.outExchange, new SensorDataSerializationSchema()));
+        }
+        // print the results with a single thread, rather than in parallel
         dataStream.print().setParallelism(1);
 
         env.execute("SparkWorks Stream Listener");

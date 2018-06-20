@@ -4,8 +4,9 @@ import net.sparkworks.SparkConfiguration;
 import net.sparkworks.functions.SensorDataAverageReduce;
 import net.sparkworks.functions.SensorDataMapFunction;
 import net.sparkworks.model.SensorData;
+import net.sparkworks.out.RMQOut;
+import net.sparkworks.serialization.SensorDataSerializationSchema;
 import net.sparkworks.util.RBQueue;
-import org.apache.flink.api.common.functions.ReduceFunction;
 import org.apache.flink.api.java.functions.KeySelector;
 import org.apache.flink.streaming.api.datastream.DataStream;
 import org.apache.flink.streaming.api.datastream.KeyedStream;
@@ -53,7 +54,6 @@ public class StreamProcessor {
         // Key messages based on the URN
         final KeyedStream<SensorData, String> keyedStream = dataStream
                 .keyBy(new KeySelector<SensorData, String>() {
-
                     public String getKey(SensorData value) {
                         return value.getUrn();
                     }
@@ -64,6 +64,9 @@ public class StreamProcessor {
                 .timeWindow(Time.seconds(10))
                 .reduce(new SensorDataAverageReduce());
 
+        if (SparkConfiguration.doOutput) {
+            resultStream.addSink(new RMQOut<SensorData>(connectionConfig, SparkConfiguration.outExchange, new SensorDataSerializationSchema()));
+        }
         // print the results with a single thread, rather than in parallel
         resultStream.print().setParallelism(1);
 

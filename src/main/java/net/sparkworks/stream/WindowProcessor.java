@@ -5,9 +5,10 @@ import net.sparkworks.functions.SensorDataAverageReduce;
 import net.sparkworks.functions.SensorDataMapFunction;
 import net.sparkworks.functions.TimestampMapFunction;
 import net.sparkworks.model.SensorData;
+import net.sparkworks.out.RMQOut;
+import net.sparkworks.serialization.SensorDataSerializationSchema;
 import net.sparkworks.util.RBQueue;
 import net.sparkworks.util.TimestampExtractor;
-import org.apache.flink.api.common.functions.MapFunction;
 import org.apache.flink.api.java.functions.KeySelector;
 import org.apache.flink.streaming.api.TimeCharacteristic;
 import org.apache.flink.streaming.api.datastream.DataStream;
@@ -16,9 +17,6 @@ import org.apache.flink.streaming.api.environment.StreamExecutionEnvironment;
 import org.apache.flink.streaming.api.windowing.time.Time;
 import org.apache.flink.streaming.connectors.rabbitmq.common.RMQConnectionConfig;
 import org.apache.flink.streaming.util.serialization.SimpleStringSchema;
-
-import java.util.Calendar;
-import java.util.Date;
 
 /**
  * A simple Flink stream processing engine connecting to the SparkWorks message broker.
@@ -85,6 +83,9 @@ public class WindowProcessor {
         // Final transformation to set the timestamp to the start of the window
         final DataStream<SensorData> finalStream = resultStream.map(tmfunc);
 
+        if (SparkConfiguration.doOutput) {
+            finalStream.addSink(new RMQOut<SensorData>(connectionConfig, SparkConfiguration.outExchange, new SensorDataSerializationSchema()));
+        }
         // print the results with a single thread, rather than in parallel
         finalStream.print().setParallelism(1);
 
