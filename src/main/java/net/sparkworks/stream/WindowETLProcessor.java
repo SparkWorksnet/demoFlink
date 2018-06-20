@@ -57,8 +57,7 @@ public class WindowETLProcessor {
                         connectionConfig,            // config for the RabbitMQ connection
                         SparkConfiguration.queue, // name of the RabbitMQ queue to consume
                         true,                        // use correlation ids; can be false if only at-least-once is required
-                        new SimpleStringSchema()))
-                .setParallelism(1); // deserialization schema to turn messages into Java objects
+                        new SimpleStringSchema())); // deserialization schema to turn messages into Java objects
 
         // convert RabbitMQ messages to SensorData
         final DataStream<SensorData> dataStream = rawStream
@@ -82,7 +81,7 @@ public class WindowETLProcessor {
         // Define the window
         final WindowedStream<SensorData, String, TimeWindow> resultStream = keyedStream
                 .window(TumblingEventTimeWindows.of(Time.minutes(windowMinutes)))
-                .allowedLateness(Time.minutes(1));
+                .allowedLateness(Time.days(10000));
 
         // Execute the ETL for each tumbling window of the grouped values
         final DataStream<SensorData> reducedStream = resultStream.reduce(new SensorDataAverageReduce());

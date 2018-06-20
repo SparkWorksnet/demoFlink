@@ -50,8 +50,7 @@ public class WindowProcessor {
                         connectionConfig,            // config for the RabbitMQ connection
                         SparkConfiguration.queue, // name of the RabbitMQ queue to consume
                         true,                        // use correlation ids; can be false if only at-least-once is required
-                        new SimpleStringSchema()))
-                .setParallelism(1); // deserialization schema to turn messages into Java objects
+                        new SimpleStringSchema())); // deserialization schema to turn messages into Java objects
 
         // convert RabbitMQ messages to SensorData
         final DataStream<SensorData> dataStream = rawStream
@@ -70,11 +69,12 @@ public class WindowProcessor {
                     }
                 });
 
-        final int windowMinutes = 1;
+        final int windowMinutes = 5;
 
         // Define the window and apply the reduce transformation
         final DataStream<SensorData> resultStream = keyedStream
-                .timeWindow(Time.seconds(windowMinutes * 60))
+                .timeWindow(Time.minutes(windowMinutes))
+                .allowedLateness(Time.days(10000))
                 .reduce(new SensorDataAverageReduce());
 
         final TimestampMapFunction tmfunc = new TimestampMapFunction();
