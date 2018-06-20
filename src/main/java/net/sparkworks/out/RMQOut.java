@@ -24,4 +24,19 @@ public class RMQOut<T> extends RMQSink<T> {
         this.channel.exchangeDeclare(this.queueName, "topic", true);
     }
 
+    /**
+     * Called when new data arrives to the sink, and forwards it to RMQ.
+     *
+     * @param value The incoming data
+     */
+    @Override
+    public void invoke(T value) {
+        try {
+            byte[] msg = schema.serialize(value);
+            channel.basicPublish(this.queueName, queueName, null, msg);
+        } catch (IOException e) {
+            throw new RuntimeException("Cannot send RMQ message " + queueName, e);
+        }
+    }
+
 }
