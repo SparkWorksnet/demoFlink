@@ -90,5 +90,63 @@ under the License.
 
     </dependencies>
 
+    <build>
+        <plugins>
+            <plugin>
+                <groupId>com.jolira</groupId>
+                <artifactId>onejar-maven-plugin</artifactId>
+                <executions>
+                    <execution>
+                        <id>listener</id>
+                        <configuration>
+                            <mainClass>net.sparkworks.stream.StreamListener</mainClass>
+                            <filename>
+                                flink.jar
+                            </filename>
+                        </configuration>
+                        <goals>
+                            <goal>one-jar</goal>
+                        </goals>
+                    </execution>
+                    <execution>
+                        <id>stream</id>
+                        <configuration>
+                            <mainClass>net.sparkworks.stream.StreamProcessor</mainClass>
+                            <filename>
+                                flink-s.jar
+                            </filename>
+                        </configuration>
+                        <goals>
+                            <goal>one-jar</goal>
+                        </goals>
+                    </execution>
+                    <execution>
+                        <id>window</id>
+                        <configuration>
+                            <mainClass>net.sparkworks.stream.WindowProcessor</mainClass>
+                            <filename>
+                                flink-w.jar
+                            </filename>
+                        </configuration>
+                        <goals>
+                            <goal>one-jar</goal>
+                        </goals>
+                    </execution>
+                    <execution>
+                        <id>windowELT</id>
+                        <configuration>
+                            <mainClass>net.sparkworks.stream.WindowETLProcessor</mainClass>
+                            <filename>
+                                flink-welt.jar
+                            </filename>
+                        </configuration>
+                        <goals>
+                            <goal>one-jar</goal>
+                        </goals>
+                    </execution>
+                </executions>
+            </plugin>
+        </plugins>
+    </build>
 
 </project>

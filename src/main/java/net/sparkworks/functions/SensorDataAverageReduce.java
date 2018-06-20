@@ -15,6 +15,7 @@ public class SensorDataAverageReduce
         SensorData value = new SensorData();
         value.setUrn(a.getUrn());
         value.setValue((a.getValue() + b.getValue()) / 2);
+        value.setTimestamp(a.getTimestamp());
         return value;
     }
 

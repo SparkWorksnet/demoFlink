@@ -3,7 +3,10 @@ package net.sparkworks.stream;
 import net.sparkworks.SparkConfiguration;
 import net.sparkworks.functions.SensorDataAverageReduce;
 import net.sparkworks.functions.SensorDataMapFunction;
+import net.sparkworks.functions.TimestampMapFunction;
 import net.sparkworks.model.SensorData;
+import net.sparkworks.out.RMQOut;
+import net.sparkworks.serialization.SensorDataSerializationSchema;
 import net.sparkworks.util.RBQueue;
 import net.sparkworks.util.TimestampExtractor;
 import org.apache.flink.api.java.functions.KeySelector;
@@ -67,13 +70,24 @@ public class WindowProcessor {
                     }
                 });
 
+        final int windowMinutes = 1;
+
         // Define the window and apply the reduce transformation
-        final DataStream resultStream = keyedStream
-                .timeWindow(Time.seconds(10))
+        final DataStream<SensorData> resultStream = keyedStream
+                .timeWindow(Time.seconds(windowMinutes * 60))
                 .reduce(new SensorDataAverageReduce());
 
+        final TimestampMapFunction tmfunc = new TimestampMapFunction();
+        tmfunc.setWindowMinutes(windowMinutes);
+
+        // Final transformation to set the timestamp to the start of the window
+        final DataStream<SensorData> finalStream = resultStream.map(tmfunc);
+
+        if (SparkConfiguration.doOutput) {
+            finalStream.addSink(new RMQOut<SensorData>(connectionConfig, SparkConfiguration.outExchange, new SensorDataSerializationSchema()));
+        }
         // print the results with a single thread, rather than in parallel
-        resultStream.print().setParallelism(1);
+        finalStream.print().setParallelism(1);
 
         env.execute("SparkWorks Window Processor");
     }
