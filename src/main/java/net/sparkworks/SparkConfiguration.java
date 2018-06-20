@@ -19,4 +19,8 @@ public interface SparkConfiguration {
 
     public final String password = "password";
 
+    public final String outExchange = "ichatz-flink-result";
+
+    public final boolean doOutput = false;
+
 }
