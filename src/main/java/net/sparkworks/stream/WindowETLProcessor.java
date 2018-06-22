@@ -1,7 +1,8 @@
 package net.sparkworks.stream;
 
 import net.sparkworks.SparkConfiguration;
-import net.sparkworks.functions.SensorDataAverageReduce;
+import net.sparkworks.functions.ETLApply;
+import net.sparkworks.functions.ETLApplyApacheMath;
 import net.sparkworks.functions.SensorDataMapFunction;
 import net.sparkworks.functions.TimestampMapFunction;
 import net.sparkworks.model.SensorData;
@@ -15,11 +16,13 @@ import org.apache.flink.streaming.api.datastream.DataStream;
 import org.apache.flink.streaming.api.datastream.KeyedStream;
 import org.apache.flink.streaming.api.datastream.WindowedStream;
 import org.apache.flink.streaming.api.environment.StreamExecutionEnvironment;
+import org.apache.flink.streaming.api.functions.windowing.WindowFunction;
 import org.apache.flink.streaming.api.windowing.assigners.TumblingEventTimeWindows;
 import org.apache.flink.streaming.api.windowing.time.Time;
 import org.apache.flink.streaming.api.windowing.windows.TimeWindow;
 import org.apache.flink.streaming.connectors.rabbitmq.common.RMQConnectionConfig;
 import org.apache.flink.streaming.util.serialization.SimpleStringSchema;
+import org.apache.flink.util.Collector;
 
 /**
  * A simple Flink stream processing engine connecting to the SparkWorks message broker.
@@ -84,8 +87,7 @@ public class WindowETLProcessor {
                 .allowedLateness(Time.days(10000));
 
         // Execute the ETL for each tumbling window of the grouped values
-        final DataStream<SensorData> reducedStream = resultStream.reduce(new SensorDataAverageReduce());
-//                .apply(new ETLApply());
+        final DataStream<SensorData> reducedStream = resultStream.apply(new ETLApplyApacheMath());
 
         final TimestampMapFunction tmfunc = new TimestampMapFunction();
         tmfunc.setWindowMinutes(windowMinutes);
@@ -97,7 +99,7 @@ public class WindowETLProcessor {
             finalStream.addSink(new RMQOut<SensorData>(connectionConfig, SparkConfiguration.outExchange, new SensorDataSerializationSchema()));
         }
         // print the results with a single thread, rather than in parallel
-        finalStream.print().setParallelism(1);
+//        finalStream.print().setParallelism(1);
 
         env.execute("SparkWorks Window ETL Processor");
     }
