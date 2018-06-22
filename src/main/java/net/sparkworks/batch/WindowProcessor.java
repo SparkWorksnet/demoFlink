@@ -1,6 +1,5 @@
 package net.sparkworks.batch;
 
-import net.sparkworks.functions.SensorDataAverageReduce;
 import net.sparkworks.functions.SensorTupleDataMapFunction;
 import net.sparkworks.functions.TimestampMapFunction;
 import net.sparkworks.model.SensorData;
@@ -12,7 +11,7 @@ import org.apache.flink.api.java.utils.ParameterTool;
 public class WindowProcessor {
 
     public static void main(String[] args) throws Exception {
-
+        long start = System.currentTimeMillis();
         // the filename to use as input dataset
         final String filename;
         try {
@@ -39,10 +38,10 @@ public class WindowProcessor {
         //env.setStreamTimeCharacteristic(TimeCharacteristic.EventTime);
 
         // create a dataset based on the csv file
-        final DataSet<Tuple3<String, Double, Long>> rawData =
+        final DataSet<Tuple3<String, Long, Double>> rawData =
                 env.readCsvFile(filename)
                         .includeFields("111")
-                        .types(String.class, Double.class, Long.class);
+                        .types(String.class, Long.class, Double.class);
 
         // convert CSV lines to SensorData
         final DataSet<SensorData> dataSet = rawData
@@ -74,12 +73,11 @@ public class WindowProcessor {
 
         // Group by messaged based on the URN and Timestamp
         final DataSet<SensorData> resultSet = windowedSet
-                .groupBy("urn", "timestamp")
-                .reduce(new SensorDataAverageReduce());
+                .groupBy("urn", "timestamp").reduceGroup(new ApacheReduce());
 
         // print the results
         resultSet.print();
-
+        System.out.println("END execution took " + (System.currentTimeMillis() - start));
     }
 
 

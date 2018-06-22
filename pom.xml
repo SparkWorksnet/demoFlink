@@ -150,6 +150,18 @@ under the License.
                             <goal>one-jar</goal>
                         </goals>
                     </execution>
+                    <execution>
+                        <id>batch</id>
+                        <configuration>
+                            <mainClass>net.sparkworks.batch.WindowProcessor</mainClass>
+                            <filename>
+                                flink-bw.jar
+                            </filename>
+                        </configuration>
+                        <goals>
+                            <goal>one-jar</goal>
+                        </goals>
+                    </execution>
                 </executions>
             </plugin>
         </plugins>
