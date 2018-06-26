@@ -3,6 +3,7 @@ package net.sparkworks.stream;
 import net.sparkworks.SparkConfiguration;
 import net.sparkworks.functions.ETLApply;
 import net.sparkworks.functions.ETLApplyApacheMath;
+import net.sparkworks.functions.SensorDataAverageReduce;
 import net.sparkworks.functions.SensorDataMapFunction;
 import net.sparkworks.functions.TimestampMapFunction;
 import net.sparkworks.model.SensorData;
@@ -87,7 +88,9 @@ public class WindowETLProcessor {
                 .allowedLateness(Time.days(10000));
 
         // Execute the ETL for each tumbling window of the grouped values
-        final DataStream<SensorData> reducedStream = resultStream.apply(new ETLApplyApacheMath());
+        final DataStream<SensorData> reducedStream = resultStream
+                .reduce(new SensorDataAverageReduce());
+//                .apply(new ETLApplyApacheMath());
 
         final TimestampMapFunction tmfunc = new TimestampMapFunction();
         tmfunc.setWindowMinutes(windowMinutes);
