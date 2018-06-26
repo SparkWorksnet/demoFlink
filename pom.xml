@@ -25,7 +25,7 @@ under the License.
     <groupId>net.sparkworks.stream</groupId>
     <version>0.1</version>
     <artifactId>demo-flink</artifactId>
-    <name>demo-flink</name>
+    <name>SparkWorks :: Apache Flink Demo</name>
     <description>Sensor data stream processing using Apache Flink</description>
     <url>https://github.com/SparkWorksnet/demoFlink</url>
     <organization>
