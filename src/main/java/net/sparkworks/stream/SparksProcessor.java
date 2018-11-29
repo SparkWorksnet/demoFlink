@@ -8,7 +8,10 @@ import net.sparkworks.model.SensorData;
 import net.sparkworks.model.SummaryResult;
 import net.sparkworks.serialization.SensorDataDeserializationSchema;
 import net.sparkworks.util.RBQueue;
+import org.apache.flink.api.common.JobExecutionResult;
+import org.apache.flink.api.common.functions.MapFunction;
 import org.apache.flink.api.java.functions.KeySelector;
+import org.apache.flink.api.java.utils.ParameterTool;
 import org.apache.flink.streaming.api.TimeCharacteristic;
 import org.apache.flink.streaming.api.datastream.DataStream;
 import org.apache.flink.streaming.api.environment.StreamExecutionEnvironment;
@@ -16,6 +19,9 @@ import org.apache.flink.streaming.api.windowing.assigners.TumblingEventTimeWindo
 import org.apache.flink.streaming.api.windowing.time.Time;
 import org.apache.flink.streaming.connectors.rabbitmq.RMQSink;
 import org.apache.flink.streaming.connectors.rabbitmq.common.RMQConnectionConfig;
+
+import java.util.Objects;
+import java.util.concurrent.TimeUnit;
 
 /**
  * Created by akribopo on 09/09/2018.
@@ -32,6 +38,7 @@ public class SparksProcessor {
         env.setStreamTimeCharacteristic(TimeCharacteristic.EventTime);
 
         // Setup the connection settings to the RabbitMQ broker
+/*
         final RMQConnectionConfig connectionConfig = new RMQConnectionConfig.Builder()
                 .setHost(SparkConfiguration.brokerHost)
                 .setPort(SparkConfiguration.brokerPort)
@@ -39,18 +46,42 @@ public class SparksProcessor {
                 .setPassword(SparkConfiguration.password)
                 .setVirtualHost(SparkConfiguration.brokerVHost)
                 .build();
-
-        final DataStream<SensorData> rawStream = env
-                .addSource(new RBQueue<>(
-                        connectionConfig,                        // config for the RabbitMQ connection
-                        SparkConfiguration.queue,                // name of the RabbitMQ queue to consume
-                        true,                     // use correlation ids; can be false if only at-least-once is required
-                        new SensorDataDeserializationSchema())); // deserialization schema to turn messages into SensorData objects
-
-        // convert RabbitMQ messages to SensorData
-        final DataStream<SummaryResult> dataStream = rawStream
-                // Assign Timestamps
-                .assignTimestampsAndWatermarks(new SensorDataAscendingTimestampExtractor())
+*/
+    
+        final String filename;
+        Integer parallelism = null;
+        try {
+            // access the arguments of the command line tool
+            final ParameterTool params = ParameterTool.fromArgs(args);
+            if (!params.has("filename")) {
+                filename = "/tmp/sensordata.csv";
+                System.err.println("No filename specified. Please run 'WindowProcessor " +
+                        "--filename <filename>, where filename is the name of the dataset in CSV format");
+            } else {
+                filename = params.get("filename");
+            }
+        
+            if (params.has("parallelism")) {
+                parallelism = params.getInt("parallelism");
+            }
+        
+        } catch (Exception ex) {
+            System.err.println("No filename specified. Please run 'WindowProcessor " +
+                    "--filename <filename>, where filename is the name of the dataset in CSV format");
+            return;
+        }
+        
+        if (Objects.nonNull(parallelism)) {
+            env.setParallelism(parallelism);
+        }
+        
+        final DataStream<String> rawStream = env.readTextFile(filename); // deserialization schema to turn messages into SensorData objects
+    
+        DataStream<SensorData> sensorDataStream = rawStream
+                .map((MapFunction<String, SensorData>) line -> SensorData.fromString(line))
+                .assignTimestampsAndWatermarks(new SensorDataAscendingTimestampExtractor());
+        
+        final DataStream<SummaryResult> dataStream = sensorDataStream
                 // Group by device based on urn
                 .keyBy((KeySelector<SensorData, String>) SensorData::getUrn)
                 // Split into 5 minutes Time Windows
@@ -60,8 +91,11 @@ public class SparksProcessor {
 
 
         // print the results with a single thread, rather than in parallel
-        dataStream.print().setParallelism(1);
-
-        env.execute("SparkWorks Window Processor");
+//        dataStream.print();
+    
+        final JobExecutionResult jobExecutionResult = env.execute("SparkWorks Window Processor");
+        
+        System.out.println(String.format("SparkWorks Window Processor Job took: %d ms with parallelism: %d",
+                jobExecutionResult.getNetRuntime(TimeUnit.MILLISECONDS), env.getParallelism()));
     }
 }

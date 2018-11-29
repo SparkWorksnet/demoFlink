@@ -8,12 +8,16 @@ import org.apache.flink.api.java.ExecutionEnvironment;
 import org.apache.flink.api.java.tuple.Tuple3;
 import org.apache.flink.api.java.utils.ParameterTool;
 
+import java.util.Objects;
+import java.util.concurrent.TimeUnit;
+
 public class WindowProcessor {
 
     public static void main(String[] args) throws Exception {
         long start = System.currentTimeMillis();
         // the filename to use as input dataset
         final String filename;
+        Integer parallelism = null;
         try {
             // access the arguments of the command line tool
             final ParameterTool params = ParameterTool.fromArgs(args);
@@ -23,6 +27,10 @@ public class WindowProcessor {
                         "--filename <filename>, where filename is the name of the dataset in CSV format");
             } else {
                 filename = params.get("filename");
+            }
+            
+            if (params.has("parallelism")) {
+                parallelism = params.getInt("parallelism");
             }
 
         } catch (Exception ex) {
@@ -35,6 +43,9 @@ public class WindowProcessor {
         // A local environment will cause execution in the current JVM,
         // a remote environment will cause execution on a remote cluster installation.
         final ExecutionEnvironment env = ExecutionEnvironment.getExecutionEnvironment();
+        if (Objects.nonNull(parallelism)) {
+            env.setParallelism(parallelism);
+        }
         //env.setStreamTimeCharacteristic(TimeCharacteristic.EventTime);
 
         // create a dataset based on the csv file
@@ -76,7 +87,9 @@ public class WindowProcessor {
                 .groupBy("urn", "timestamp").reduceGroup(new ApacheReduce());
 
         // print the results
-        resultSet.print();
+        // resultSet.print();
+        
+        System.out.println("The job took " + env.getLastJobExecutionResult().getNetRuntime(TimeUnit.MILLISECONDS) + " to execute with parallelism " + env.getParallelism());
         System.out.println("END execution took " + (System.currentTimeMillis() - start));
     }
 

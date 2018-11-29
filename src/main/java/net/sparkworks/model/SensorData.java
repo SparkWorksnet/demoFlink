@@ -47,4 +47,25 @@ public class SensorData {
                 ", time=" + new Date(timestamp) +
                 '}';
     }
+    
+    public static SensorData fromString(String line) {
+        
+        String[] tokens = line.split("(,|;)\\s*");
+        if (tokens.length != 3) {
+            throw new IllegalStateException("Invalid record: " + line);
+        }
+        SensorData event = new SensorData();
+        
+        try {
+            event.setUrn(tokens[0]);
+            event.setTimestamp(Long.parseLong(tokens[1]));
+            event.setValue(Double.parseDouble(tokens[2]));
+            
+        } catch (Exception e) {
+            throw new IllegalStateException("Invalid field: " + line, e);
+        }
+        
+        return event;
+    }
+    
 }
