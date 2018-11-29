@@ -14,6 +14,7 @@ public class ApacheReduce implements GroupReduceFunction<SensorData, SensorData>
             outData.setTimestamp(sensorData.getTimestamp());
             summaryStatistics.addValue(sensorData.getValue());
         }
+        outData.setValue(summaryStatistics.getMean());
         out.collect(outData);
     }
 }
