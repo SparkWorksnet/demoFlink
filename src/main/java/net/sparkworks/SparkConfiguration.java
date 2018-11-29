@@ -7,17 +7,17 @@ package net.sparkworks;
  */
 public interface SparkConfiguration {
 
-    public final String brokerHost = "broker.sparkworks.net";
+    public final String brokerHost = "localhost";
 
     public final int brokerPort = 5672;
 
     public final String brokerVHost = "/";
 
-    public final String queue = "ichatz-annotated-readings";
+    public final String queue = "annotated-readings-processing";
 
-    public final String username = "username";
+    public final String username = "bugs";
 
-    public final String password = "password";
+    public final String password = "bunny";
 
     public final String outExchange = "ichatz-flink-result";
 
