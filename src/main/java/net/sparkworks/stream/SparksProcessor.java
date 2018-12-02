@@ -10,8 +10,12 @@ import net.sparkworks.serialization.SensorDataDeserializationSchema;
 import net.sparkworks.util.RBQueue;
 import org.apache.flink.api.common.JobExecutionResult;
 import org.apache.flink.api.common.functions.MapFunction;
+import org.apache.flink.api.common.functions.RichMapFunction;
 import org.apache.flink.api.java.functions.KeySelector;
 import org.apache.flink.api.java.utils.ParameterTool;
+import org.apache.flink.configuration.Configuration;
+import org.apache.flink.dropwizard.metrics.DropwizardMeterWrapper;
+import org.apache.flink.metrics.Meter;
 import org.apache.flink.streaming.api.TimeCharacteristic;
 import org.apache.flink.streaming.api.datastream.DataStream;
 import org.apache.flink.streaming.api.environment.StreamExecutionEnvironment;
@@ -74,6 +78,8 @@ public class SparksProcessor {
         if (Objects.nonNull(parallelism)) {
             env.setParallelism(parallelism);
         }
+    
+        env.getConfig().setLatencyTrackingInterval(5L);
         
         final DataStream<String> rawStream = env.readTextFile(filename); // deserialization schema to turn messages into SensorData objects
     
@@ -88,14 +94,35 @@ public class SparksProcessor {
                 .window(TumblingEventTimeWindows.of(Time.minutes(5)))
                 // Aggregate
                 .aggregate(new SummaryAggregateFunction(), new SummaryProcessWindowFunction());
-
-
+        
+        dataStream.map(new ThroughputMetricMapper());
+        
         // print the results with a single thread, rather than in parallel
-//        dataStream.print();
+        dataStream.print();
     
         final JobExecutionResult jobExecutionResult = env.execute("SparkWorks Window Processor");
         
         System.out.println(String.format("SparkWorks Window Processor Job took: %d ms with parallelism: %d",
                 jobExecutionResult.getNetRuntime(TimeUnit.MILLISECONDS), env.getParallelism()));
     }
+    
+    private static class ThroughputMetricMapper extends RichMapFunction<SummaryResult, SummaryResult> {
+        
+        private transient Meter meter;
+        
+        @Override
+        public void open(Configuration parameters) throws Exception {
+            com.codahale.metrics.Meter dropwizardMeter = new com.codahale.metrics.Meter();
+            this.meter = getRuntimeContext()
+                    .getMetricGroup()
+                    .meter("throughputMeter", new DropwizardMeterWrapper(dropwizardMeter));
+        }
+        
+        @Override
+        public SummaryResult map(SummaryResult value) {
+            this.meter.markEvent();
+            return value;
+        }
+    }
+    
 }
