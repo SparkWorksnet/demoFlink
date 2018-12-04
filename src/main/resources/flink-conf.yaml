@@ -1,2 +1,3 @@
-metrics.reporter.slf4j.class: org.apache.flink.metrics.slf4j.Slf4jReporter
-metrics.reporter.slf4j.interval: 1 SECONDS
+metrics.reporters: console
+metrics.reporter.console.class: net.sparkworks.reporter.FileReporter
+metrics.reporter.influxdb.interval: 1 SECONDS
