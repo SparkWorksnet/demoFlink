@@ -93,12 +93,14 @@ public class SparksProcessor {
         dataStream.map(new ThroughputMetricMapper(filename, String.valueOf(env.getParallelism())));
         
         // print the results with a single thread, rather than in parallel
-        dataStream.print();
+//        dataStream.print();
     
         final JobExecutionResult jobExecutionResult = env.execute("SparkWorks Window Processor");
         
+/*
         System.out.println(String.format("SparkWorks Window Processor Job took: %d ms with parallelism: %d",
                 jobExecutionResult.getNetRuntime(TimeUnit.MILLISECONDS), env.getParallelism()));
+*/
     }
     
     private static class ThroughputMetricMapper extends RichMapFunction<SummaryResult, SummaryResult> {

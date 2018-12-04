@@ -32,10 +32,10 @@ public class FileReporter extends AbstractReporter implements Scheduled {
         this.meters.forEach((meter, s) -> {
             if (s.contains("throughput")) {
                 String filename = s.substring(s.lastIndexOf("-") + 1);
-                final File file = Paths.get("/tmp/" + filename + ".txt").toFile();
+                final File file = Paths.get("/tmp/" + filename + ".csv").toFile();
                 try {
                     FileUtils.writeStringToFile(file, lineSeparator, true);
-                    FileUtils.writeStringToFile(file, s + ": " + meter.getRate(), true);
+                    FileUtils.writeStringToFile(file, s + "," + meter.getRate(), true);
                 } catch (IOException e) {
                     e.printStackTrace();
                 }
@@ -44,7 +44,7 @@ public class FileReporter extends AbstractReporter implements Scheduled {
                     if (gaugeName.contains("CPU")) {
                         try {
                             FileUtils.writeStringToFile(file, lineSeparator, true);
-                            FileUtils.writeStringToFile(file, gaugeName + ": " + gauge.getValue(), true);
+                            FileUtils.writeStringToFile(file, gaugeName + "," + gauge.getValue(), true);
                         } catch (IOException e) {
                             e.printStackTrace();
                         }
