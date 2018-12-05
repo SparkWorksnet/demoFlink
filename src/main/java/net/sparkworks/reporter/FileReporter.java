@@ -37,21 +37,19 @@ public class FileReporter extends AbstractReporter implements Scheduled {
             if (s.contains("throughput")) {
                 String filename = s.substring(s.lastIndexOf("-") + 1);
                 file[0] = Paths.get("/tmp/" + filename + ".csv").toFile();
+                StringBuilder sb = new StringBuilder(String.valueOf(timestamp));
+                sb.append(",");
+                sb.append(s + "," + meter.getRate() + ",");
+                this.gauges.forEach((gauge, gaugeName) -> {
+                    if (gaugeName.contains("CPU")) {
+                        sb.append(gaugeName + "," + gauge.getValue() + ",");
+                    }
+                });
                 try {
-                    FileUtils.writeStringToFile(file[0], timestamp + "," + s + "," + meter.getRate(), true);
+                    FileUtils.writeStringToFile(file[0], sb.toString(), true);
                 } catch (IOException e) {
                     e.printStackTrace();
                 }
-    
-                this.gauges.forEach((gauge, gaugeName) -> {
-                    if (gaugeName.contains("CPU")) {
-                        try {
-                            FileUtils.writeStringToFile(file[0], timestamp + "," + gaugeName + "," + gauge.getValue(), true);
-                        } catch (IOException e) {
-                            e.printStackTrace();
-                        }
-                    }
-                });
             }
         });
         if (Objects.nonNull(file[0])) {
