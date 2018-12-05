@@ -20,7 +20,6 @@ import org.apache.flink.streaming.api.windowing.assigners.TumblingEventTimeWindo
 import org.apache.flink.streaming.api.windowing.time.Time;
 
 import java.util.Objects;
-import java.util.concurrent.TimeUnit;
 
 /**
  * Created by akribopo on 09/09/2018.
