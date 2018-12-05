@@ -31,14 +31,13 @@ public class FileReporter extends AbstractReporter implements Scheduled {
     
     @Override
     public void report() {
-        final long timestamp = System.nanoTime();
+        final long timestamp = Instant.now().toEpochMilli();
         final File[] file = {null};
         this.meters.forEach((meter, s) -> {
             if (s.contains("throughput")) {
                 String filename = s.substring(s.lastIndexOf("-") + 1);
                 file[0] = Paths.get("/tmp/" + filename + ".csv").toFile();
                 try {
-                    FileUtils.writeStringToFile(file[0], lineSeparator, true);
                     FileUtils.writeStringToFile(file[0], timestamp + "," + s + "," + meter.getRate(), true);
                 } catch (IOException e) {
                     e.printStackTrace();
