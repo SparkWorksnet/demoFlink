@@ -33,31 +33,25 @@ public class FileReporter extends AbstractReporter implements Scheduled {
     public void report() {
         final long timestamp = Instant.now().toEpochMilli();
         final File[] file = {null};
+        StringBuilder sb = new StringBuilder(String.valueOf(timestamp));
+        sb.append(",");
         this.meters.forEach((meter, s) -> {
             if (s.contains("throughput")) {
                 String filename = s.substring(s.lastIndexOf("-") + 1);
                 file[0] = Paths.get("/tmp/" + filename + ".csv").toFile();
-                StringBuilder sb = new StringBuilder(String.valueOf(timestamp));
-                sb.append(",");
                 sb.append(s + "," + meter.getRate() + ",");
                 this.gauges.forEach((gauge, gaugeName) -> {
                     if (gaugeName.contains("CPU")) {
                         sb.append(gaugeName + "," + gauge.getValue() + ",");
                     }
                 });
-                try {
-                    FileUtils.writeStringToFile(file[0], sb.toString(), true);
-                } catch (IOException e) {
-                    e.printStackTrace();
-                }
             }
         });
-        if (Objects.nonNull(file[0])) {
-            try {
-                FileUtils.writeStringToFile(file[0], lineSeparator, true);
-            } catch (IOException e) {
-                e.printStackTrace();
-            }
+        try {
+            FileUtils.writeStringToFile(file[0], sb.toString() + lineSeparator, true);
+        } catch (IOException e) {
+            e.printStackTrace();
         }
     }
+    
 }
