@@ -47,10 +47,12 @@ public class FileReporter extends AbstractReporter implements Scheduled {
                 });
             }
         });
-        try {
-            FileUtils.writeStringToFile(file[0], sb.toString() + lineSeparator, true);
-        } catch (IOException e) {
-            e.printStackTrace();
+        if (Objects.nonNull(file[0])) {
+            try {
+                FileUtils.writeStringToFile(file[0], sb.toString() + lineSeparator, true);
+            } catch (IOException e) {
+                e.printStackTrace();
+            }
         }
     }
     

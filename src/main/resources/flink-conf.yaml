@@ -1,3 +1,3 @@
-metrics.reporters: console
-metrics.reporter.console.class: net.sparkworks.reporter.FileReporter
-metrics.reporter.influxdb.interval: 1 SECONDS
+metrics.reporters: sparks
+metrics.reporter.sparks.class: net.sparkworks.reporter.FileReporter
+metrics.reporter.sparks.interval: 1 SECONDS
