@@ -32,24 +32,36 @@ public class FileReporter extends AbstractReporter implements Scheduled {
     @Override
     public void report() {
         final long timestamp = Instant.now().toEpochMilli();
-        final File[] file = {null};
-        StringBuilder sb = new StringBuilder(String.valueOf(timestamp));
-        sb.append(",");
-        this.meters.forEach((meter, s) -> {
-            if (s.contains("throughput")) {
-                String filename = s.substring(s.lastIndexOf("-") + 1);
-                file[0] = Paths.get("/tmp/" + filename + ".csv").toFile();
-                sb.append(s + "," + meter.getRate() + ",");
-                this.gauges.forEach((gauge, gaugeName) -> {
-                    if (gaugeName.contains("CPU")) {
-                        sb.append(gaugeName + "," + gauge.getValue() + ",");
-                    }
-                });
+        final File file = new File("/tmp/results.csv");
+        final StringBuilder header = new StringBuilder(String.valueOf("#" + timestamp));
+        final StringBuilder values = new StringBuilder(String.valueOf(timestamp));
+        this.gauges.forEach((gauge, gaugeName) -> {
+            if ((gaugeName.contains("Status.JVM.CPU") ||
+                    gaugeName.contains("Heap.Used") ||
+                    gaugeName.contains("NonHeap.Used") ||
+                    gaugeName.contains("System.CPU") || gaugeName.contains("System.Memory") || gaugeName.contains("System.Swap")) &&
+                    !gaugeName.contains("jobmanager")) {
+                header.append("@" + gaugeName.replace(".", "_"));
+                values.append("@" + gauge.getValue());
             }
         });
-        if (Objects.nonNull(file[0])) {
+        this.meters.forEach((meter, meterName) -> {
+            if ((meterName.contains("numRecords") || meterName.contains("System.CPU")  || meterName.contains("System.Memory") || meterName.contains("System.Swap")) &&
+                    !meterName.contains("jobmanager")) {
+                header.append("@" + meterName.replace(".", "_"));
+                values.append("@" + meter.getRate());
+            }
+        });
+        this.counters.forEach((counter, counterName) -> {
+            if ((counterName.contains("numRecords") || counterName.contains("System.CPU") || counterName.contains("System.Memory") || counterName.contains("System.Swap")) &&
+                    !counterName.contains("jobmanager")) {
+                header.append("@" + counterName.replace(".", "_"));
+                values.append("@" + counter.getCount());
+            }
+        });
+        if (Objects.nonNull(file)) {
             try {
-                FileUtils.writeStringToFile(file[0], sb.toString() + lineSeparator, true);
+                FileUtils.writeStringToFile(file, header.toString() + lineSeparator + values.toString() + lineSeparator, true);
             } catch (IOException e) {
                 e.printStackTrace();
             }

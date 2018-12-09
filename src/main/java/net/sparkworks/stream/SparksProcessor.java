@@ -7,12 +7,8 @@ import net.sparkworks.model.SensorData;
 import net.sparkworks.model.SummaryResult;
 import org.apache.flink.api.common.JobExecutionResult;
 import org.apache.flink.api.common.functions.MapFunction;
-import org.apache.flink.api.common.functions.RichMapFunction;
 import org.apache.flink.api.java.functions.KeySelector;
 import org.apache.flink.api.java.utils.ParameterTool;
-import org.apache.flink.configuration.Configuration;
-import org.apache.flink.dropwizard.metrics.DropwizardMeterWrapper;
-import org.apache.flink.metrics.Meter;
 import org.apache.flink.streaming.api.TimeCharacteristic;
 import org.apache.flink.streaming.api.datastream.DataStream;
 import org.apache.flink.streaming.api.environment.StreamExecutionEnvironment;
@@ -73,7 +69,7 @@ public class SparksProcessor {
             env.setParallelism(parallelism);
         }
     
-        env.getConfig().setLatencyTrackingInterval(5L);
+//        env.getConfig().setLatencyTrackingInterval(5L);
         
         final DataStream<String> rawStream = env.readTextFile(filename); // deserialization schema to turn messages into SensorData objects
     
@@ -89,45 +85,8 @@ public class SparksProcessor {
                 // Aggregate
                 .aggregate(new SummaryAggregateFunction(), new SummaryProcessWindowFunction());
         
-        dataStream.map(new ThroughputMetricMapper(filename, String.valueOf(env.getParallelism())));
-        
-        // print the results with a single thread, rather than in parallel
-//        dataStream.print();
     
         final JobExecutionResult jobExecutionResult = env.execute("SparkWorks Window Processor");
-        
-/*
-        System.out.println(String.format("SparkWorks Window Processor Job took: %d ms with parallelism: %d",
-                jobExecutionResult.getNetRuntime(TimeUnit.MILLISECONDS), env.getParallelism()));
-*/
-    }
-    
-    private static class ThroughputMetricMapper extends RichMapFunction<SummaryResult, SummaryResult> {
-        
-        private final String filename;
-        
-        private final String parallelism;
-        
-        private transient Meter meter;
-    
-        private ThroughputMetricMapper(String filename, String parallelism) {
-            this.filename = filename;
-            this.parallelism = parallelism;
-        }
-    
-        @Override
-        public void open(Configuration parameters) throws Exception {
-            com.codahale.metrics.Meter dropwizardMeter = new com.codahale.metrics.Meter();
-            this.meter = getRuntimeContext()
-                    .getMetricGroup()
-                    .meter("throughputMeter-" + filename.substring(filename.lastIndexOf("/") + 1) + "_p" + parallelism, new DropwizardMeterWrapper(dropwizardMeter));
-        }
-        
-        @Override
-        public SummaryResult map(SummaryResult value) {
-            this.meter.markEvent();
-            return value;
-        }
     }
     
 }
