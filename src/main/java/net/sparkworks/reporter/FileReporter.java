@@ -37,10 +37,10 @@ public class FileReporter extends AbstractReporter implements Scheduled {
         final StringBuilder values = new StringBuilder(String.valueOf(timestamp));
         AtomicBoolean hasMetrics = new AtomicBoolean(false);
         this.gauges.forEach((gauge, gaugeName) -> {
-            if ((gaugeName.contains("Status.JVM.CPU") ||
-                    gaugeName.contains("Heap.Used") ||
-                    gaugeName.contains("NonHeap.Used") ||
-                    gaugeName.contains("System.CPU") || gaugeName.contains("System.Memory") || gaugeName.contains("System.Swap")) &&
+            if ((gaugeName.contains("Status_JVM_CPU") ||
+                    gaugeName.contains("Heap_Used") ||
+                    gaugeName.contains("NonHeap_Used") ||
+                    gaugeName.contains("System_CPU") || gaugeName.contains("System_Memory") || gaugeName.contains("System_Swap")) &&
                     !gaugeName.contains("jobmanager")) {
                 header.append("@" + gaugeName);
                 values.append("@" + gauge.getValue());
@@ -48,7 +48,7 @@ public class FileReporter extends AbstractReporter implements Scheduled {
             }
         });
         this.meters.forEach((meter, meterName) -> {
-            if ((meterName.contains("numRecords") || meterName.contains("System.CPU")  || meterName.contains("System.Memory") || meterName.contains("System.Swap")) &&
+            if ((meterName.contains("numRecords") || meterName.contains("System_CPU")  || meterName.contains("System_Memory") || meterName.contains("System_Swap")) &&
                     !meterName.contains("jobmanager")) {
                 header.append("@" + meterName);
                 values.append("@" + meter.getRate());
@@ -56,7 +56,7 @@ public class FileReporter extends AbstractReporter implements Scheduled {
             }
         });
         this.counters.forEach((counter, counterName) -> {
-            if ((counterName.contains("numRecords") || counterName.contains("System.CPU") || counterName.contains("System.Memory") || counterName.contains("System.Swap")) &&
+            if ((counterName.contains("numRecords") || counterName.contains("System_CPU") || counterName.contains("System_Memory") || counterName.contains("System_Swap")) &&
                     !counterName.contains("jobmanager")) {
                 header.append("@" + counterName);
                 values.append("@" + counter.getCount());
