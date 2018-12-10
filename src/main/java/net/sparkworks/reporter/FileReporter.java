@@ -22,8 +22,10 @@ public class FileReporter extends AbstractReporter implements Scheduled {
             s1 -> s1.contains("CPU"),
             s1 -> s1.contains("Heap"),
             s1 -> s1.contains("Split Reader: Custom File Source") && !s1.contains("Map"),
-            s1 -> s1.contains("Split Reader: Custom File Source"),
-            s1 -> s1.contains("Window")
+            s1 -> s1.contains("Split Reader: Custom File Source") && s1.contains("Map"),
+            s1 -> s1.contains("Timestamps/Watermarks") && !s1.contains("Map"),
+            s1 -> s1.contains("TumblingEventTimeWindows"),
+            s1 -> s1.contains("Processor_Map")
     );
 
     @Override
