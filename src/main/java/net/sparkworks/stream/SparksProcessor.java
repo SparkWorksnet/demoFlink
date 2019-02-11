@@ -54,7 +54,7 @@ public class SparksProcessor {
             // access the arguments of the command line tool
             final ParameterTool params = ParameterTool.fromArgs(args);
             if (!params.has("filename")) {
-                filename = "/tmp/sensordata.csv";
+                filename = "/Users/nikos/Projects/DemoFlink/demoflink/test.csv";
                 System.err.println("No filename specified. Please run 'WindowProcessor " +
                         "--filename <filename>, where filename is the name of the dataset in CSV format");
             } else {
@@ -91,7 +91,7 @@ public class SparksProcessor {
 
 
         // print the results with a single thread, rather than in parallel
-//        dataStream.print();
+        dataStream.print();
     
         final JobExecutionResult jobExecutionResult = env.execute("SparkWorks Window Processor");
         
