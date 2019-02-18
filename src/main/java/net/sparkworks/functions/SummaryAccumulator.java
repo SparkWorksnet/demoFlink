@@ -1,8 +1,5 @@
 package net.sparkworks.functions;
 
-import java.util.ArrayList;
-import java.util.List;
-
 /**
  * Created by akribopo on 08/09/2018.
  */
@@ -11,30 +8,12 @@ public class SummaryAccumulator {
     private double sum = 0L;
     private double min = Long.MAX_VALUE;
     private double max = Long.MIN_VALUE;
-    private double std = 0L;
-    private List<Double> doubleList = new ArrayList<>();
 
     public void addValue(double value) {
-//        sum += value;
-//        count++;
-//        min = Math.min(min, value);
-//        max = Math.max(max, value);
-
-        double lowerThreshold = sum / count - 2 * std;
-        double upperThreshold = sum / count + 2 * std;
-        if ((value > lowerThreshold && value < upperThreshold) || std == 0) {
-            doubleList.add(value);
-            sum += value;
-            count++;
-            min = Math.min(min, value);
-            max = Math.max(max, value);
-            double sqrMeanDiff = 0L;
-            double mean = sum / count;
-            for (Double val : doubleList) {
-                sqrMeanDiff += Math.pow((val - mean), 2);
-            }
-            std = Math.sqrt(sqrMeanDiff / count);
-        }
+        sum += value;
+        count++;
+        min = Math.min(min, value);
+        max = Math.max(max, value);
     }
 
     public SummaryAccumulator merge(SummaryAccumulator summaryAccumulator) {

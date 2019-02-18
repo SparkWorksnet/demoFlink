@@ -1,32 +1,27 @@
 package net.sparkworks.stream;
 
-import net.sparkworks.SparkConfiguration;
+import net.sparkworks.functions.IQRApplyWindowFunction;
 import net.sparkworks.functions.SensorDataAscendingTimestampExtractor;
 import net.sparkworks.functions.SummaryAggregateFunction;
 import net.sparkworks.functions.SummaryProcessWindowFunction;
 import net.sparkworks.model.SensorData;
 import net.sparkworks.model.SummaryResult;
-import net.sparkworks.serialization.SensorDataDeserializationSchema;
-import net.sparkworks.util.RBQueue;
 import org.apache.flink.api.common.JobExecutionResult;
 import org.apache.flink.api.common.functions.MapFunction;
 import org.apache.flink.api.java.functions.KeySelector;
 import org.apache.flink.api.java.utils.ParameterTool;
 import org.apache.flink.streaming.api.TimeCharacteristic;
 import org.apache.flink.streaming.api.datastream.DataStream;
+import org.apache.flink.streaming.api.datastream.WindowedStream;
 import org.apache.flink.streaming.api.environment.StreamExecutionEnvironment;
 import org.apache.flink.streaming.api.windowing.assigners.TumblingEventTimeWindows;
 import org.apache.flink.streaming.api.windowing.time.Time;
-import org.apache.flink.streaming.connectors.rabbitmq.RMQSink;
-import org.apache.flink.streaming.connectors.rabbitmq.common.RMQConnectionConfig;
+import org.apache.flink.streaming.api.windowing.windows.TimeWindow;
 
 import java.util.Objects;
 import java.util.concurrent.TimeUnit;
 
-/**
- * Created by akribopo on 09/09/2018.
- */
-public class SparksProcessor {
+public class IQRRemoveOutliersProcessor {
 
     public static void main(String[] args) throws Exception {
 
@@ -47,7 +42,7 @@ public class SparksProcessor {
                 .setVirtualHost(SparkConfiguration.brokerVHost)
                 .build();
 */
-    
+
         final String filename;
         Integer parallelism = null;
         try {
@@ -60,41 +55,48 @@ public class SparksProcessor {
             } else {
                 filename = params.get("filename");
             }
-        
+
             if (params.has("parallelism")) {
                 parallelism = params.getInt("parallelism");
             }
-        
+
         } catch (Exception ex) {
             System.err.println("No filename specified. Please run 'WindowProcessor " +
                     "--filename <filename>, where filename is the name of the dataset in CSV format");
             return;
         }
-        
+
         if (Objects.nonNull(parallelism)) {
             env.setParallelism(parallelism);
         }
-        
+
         final DataStream<String> rawStream = env.readTextFile(filename); // deserialization schema to turn messages into SensorData objects
-    
+
         DataStream<SensorData> sensorDataStream = rawStream
                 .map((MapFunction<String, SensorData>) line -> SensorData.fromString(line))
                 .assignTimestampsAndWatermarks(new SensorDataAscendingTimestampExtractor());
-        
-        final DataStream<SummaryResult> dataStream = sensorDataStream
-                // Group by device based on urn
+
+        // Group data by sensor urn
+        final WindowedStream<SensorData, String, TimeWindow> windowedStream = sensorDataStream
                 .keyBy((KeySelector<SensorData, String>) SensorData::getUrn)
-                // Split into 5 minutes Time Windows
+                .window(TumblingEventTimeWindows.of(Time.minutes(5)));
+
+        // Aggregate and print
+        windowedStream.aggregate(new SummaryAggregateFunction(), new SummaryProcessWindowFunction()).print();
+
+        // Remove outliers from sensor data stream
+        final DataStream<SensorData> dataStreamWithoutOutliers = windowedStream.apply(new IQRApplyWindowFunction());
+
+        // Get the summaryResult after having removed the outliers
+        final DataStream<SummaryResult> summaryResultWithoutOutliers = dataStreamWithoutOutliers
+                .keyBy((KeySelector<SensorData, String>) SensorData::getUrn)
                 .window(TumblingEventTimeWindows.of(Time.minutes(5)))
-                // Aggregate
                 .aggregate(new SummaryAggregateFunction(), new SummaryProcessWindowFunction());
 
+        summaryResultWithoutOutliers.print();
 
-        // print the results with a single thread, rather than in parallel
-//        dataStream.print();
-    
         final JobExecutionResult jobExecutionResult = env.execute("SparkWorks Window Processor");
-        
+
         System.out.println(String.format("SparkWorks Window Processor Job took: %d ms with parallelism: %d",
                 jobExecutionResult.getNetRuntime(TimeUnit.MILLISECONDS), env.getParallelism()));
     }
