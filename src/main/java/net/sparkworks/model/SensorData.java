@@ -15,6 +15,15 @@ public class SensorData {
 
     private long timestamp;
 
+    public SensorData() {
+    }
+
+    public SensorData(String urn, double value, long timestamp) {
+        this.urn = urn;
+        this.value = value;
+        this.timestamp = timestamp;
+    }
+
     public String getUrn() {
         return urn;
     }
