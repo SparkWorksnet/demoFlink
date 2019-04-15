@@ -1,5 +1,11 @@
 package net.sparkworks.model;
 
+import org.apache.flink.shaded.jackson2.com.fasterxml.jackson.core.JsonGenerationException;
+import org.apache.flink.shaded.jackson2.com.fasterxml.jackson.databind.JsonMappingException;
+import org.apache.flink.shaded.jackson2.com.fasterxml.jackson.databind.ObjectMapper;
+
+import java.io.IOException;
+
 public class CountersResult {
 
     private String urn;
@@ -64,22 +70,17 @@ public class CountersResult {
 
     public static CountersResult fromString(String line) {
 
-        String[] tokens = line.split("(,|;)\\s*");
-        if (tokens.length != 4) {
-            throw new IllegalStateException("Invalid record: " + line);
-        }
-        CountersResult event = new CountersResult();
-
+        ObjectMapper mapper = new ObjectMapper();
+        CountersResult countersResult = new CountersResult();
         try {
-            event.setUrn(tokens[0]);
-            event.setTimestamp(Long.parseLong(tokens[1]));
-            event.setCount(Long.parseLong(tokens[2]));
-            event.setOutliersCount(Long.parseLong(tokens[3]));
-
-        } catch (Exception e) {
-            throw new IllegalStateException("Invalid field: " + line, e);
+            countersResult = mapper.readValue(line, CountersResult.class);
+        } catch (JsonGenerationException e) {
+            e.printStackTrace();
+        } catch (JsonMappingException e) {
+            e.printStackTrace();
+        } catch (IOException e) {
+            e.printStackTrace();
         }
-
-        return event;
+        return countersResult;
     }
 }

@@ -13,8 +13,16 @@ import java.util.Map;
  */
 public class RMQOut<T> extends RMQSink<T> {
 
+    private String routingKey;
+
     public RMQOut(RMQConnectionConfig rmqConnectionConfig, String queueName, SerializationSchema<T> schema) {
         super(rmqConnectionConfig, queueName, schema);
+        this.routingKey = queueName;
+    }
+
+    public RMQOut(RMQConnectionConfig rmqConnectionConfig, String queueName, String routingKey, SerializationSchema<T> schema) {
+        super(rmqConnectionConfig, queueName, schema);
+        this.routingKey = routingKey;
     }
 
     @Override
@@ -33,7 +41,7 @@ public class RMQOut<T> extends RMQSink<T> {
     public void invoke(T value) {
         try {
             byte[] msg = schema.serialize(value);
-            channel.basicPublish(this.queueName, queueName, null, msg);
+            channel.basicPublish(this.queueName, routingKey, null, msg);
         } catch (IOException e) {
             throw new RuntimeException("Cannot send RMQ message " + queueName, e);
         }

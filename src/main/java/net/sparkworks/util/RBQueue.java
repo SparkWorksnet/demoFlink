@@ -17,16 +17,21 @@ import java.util.Map;
 public class RBQueue<OUT>
         extends RMQSource<OUT> {
 
+    @Override
+    public void run(SourceContext<OUT> ctx) throws Exception {
+        super.run(ctx);
+    }
+
     public RBQueue(RMQConnectionConfig rmqConnectionConfig,
-                     String queueName,
-                     boolean usesCorrelationId,
-                     DeserializationSchema<OUT> deserializationSchema) {
+                   String queueName,
+                   boolean usesCorrelationId,
+                   DeserializationSchema<OUT> deserializationSchema) {
         super(rmqConnectionConfig, queueName, usesCorrelationId, deserializationSchema);
     }
 
     protected void setupQueue() throws IOException {
         Map args = new HashMap();
-//        args.put("x-message-ttl", 10000);
+        args.put("x-message-ttl", 10000);
 
         this.channel.queueDeclare(this.queueName,
                 true,

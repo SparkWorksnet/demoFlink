@@ -67,8 +67,8 @@ public class SensorData {
         
         try {
             event.setUrn(tokens[0]);
-            event.setTimestamp(Long.parseLong(tokens[1]));
-            event.setValue(Double.parseDouble(tokens[2]));
+            event.setTimestamp(Long.parseLong(tokens[2]));
+            event.setValue(Double.parseDouble(tokens[1]));
             
         } catch (Exception e) {
             throw new IllegalStateException("Invalid field: " + line, e);
