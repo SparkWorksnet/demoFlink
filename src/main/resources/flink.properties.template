@@ -7,3 +7,5 @@ broker.queue.input.readings=annotated-readings
 broker.exchange.output.analytics=analytics-outliers
 broker.queue.input.outliers=analytics-outliers.5min
 doOutput=false
+interval.outliers=5
+interval.outliersoutliers=60

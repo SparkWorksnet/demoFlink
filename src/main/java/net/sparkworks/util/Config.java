@@ -51,6 +51,14 @@ public class Config {
         return prop.getProperty("broker.queue.input.outliers", "analytics-outliers.5min");
     }
     
+    public final int getOutliersInterval() {
+        return Integer.parseInt(prop.getProperty("interval.outliers", "5"));
+    }
+    
+    public final int getOutliersOutliersInterval() {
+        return Integer.parseInt(prop.getProperty("interval.outliersoutliers", "60"));
+    }
+    
     public final boolean doOutput() {
         return Boolean.parseBoolean(prop.getProperty("doOutput", "false"));
     }

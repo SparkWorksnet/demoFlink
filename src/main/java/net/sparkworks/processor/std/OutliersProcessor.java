@@ -98,7 +98,7 @@ public class OutliersProcessor {
         // Turn SensorData into FlaggedSensorData urn | value | timestamp | isOutlier
         final DataStream<FlaggedSensorData> flaggedSensorDataDataStream = sensorDataStream
                 .keyBy((KeySelector<SensorData, String>) SensorData::getUrn)
-                .window(TumblingEventTimeWindows.of(Time.minutes(5)))
+                .window(TumblingEventTimeWindows.of(Time.minutes(cfg.getOutliersInterval())))
                 .apply(new STDOutliersDetectApplyWindowFunction());
 
         // KeyBy URN
@@ -106,7 +106,7 @@ public class OutliersProcessor {
         // Create the CountersResult urn | timestamp | valuesCount | outliersCount
         final DataStream<CountersResult> countersResultDataStream = flaggedSensorDataDataStream
                 .keyBy((KeySelector<FlaggedSensorData, String>) FlaggedSensorData::getUrn)
-                .window(TumblingEventTimeWindows.of(Time.minutes(5)))
+                .window(TumblingEventTimeWindows.of(Time.minutes(cfg.getOutliersInterval())))
                 .aggregate(new OutliersDetectAggregateFunction(), new OutliersDetectProcessWindowFunction());
 
 /*

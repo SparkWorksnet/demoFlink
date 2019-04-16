@@ -98,7 +98,7 @@ public class ValueCountAndOutlierCountOutlierProcessor {
         // Turn the CountersResult into FlaggedCountersResult urn | timestamp | valuesCount | outliersCount | isOutlier
         final DataStream<FlaggedCountersResult> flaggedCountersResultDataStream = countersResultDataStream
                 .keyBy((KeySelector<CountersResult, String>) CountersResult::getUrn)
-                .window(TumblingEventTimeWindows.of(Time.minutes(60)))
+                .window(TumblingEventTimeWindows.of(Time.minutes(cfg.getOutliersOutliersInterval())))
                 .apply(new STDValuesCountApplyWindowFunction());
 
         // KeyBy URN
@@ -106,7 +106,7 @@ public class ValueCountAndOutlierCountOutlierProcessor {
         // Create the CountersResult urn | timestamp | valuesCount | outliersCount
         final DataStream<CountersResult> countersResultDataStream1 = flaggedCountersResultDataStream
                 .keyBy((KeySelector<FlaggedCountersResult, String>) FlaggedCountersResult::getUrn)
-                .window(TumblingEventTimeWindows.of(Time.minutes(60)))
+                .window(TumblingEventTimeWindows.of(Time.minutes(cfg.getOutliersOutliersInterval())))
                 .aggregate(new OutliersDetect2AggregateFunction(), new OutliersDetectProcessWindowFunction());
 
 /*
@@ -132,7 +132,7 @@ public class ValueCountAndOutlierCountOutlierProcessor {
         // Turn the CountersResult into FlaggedCountersResult urn | timestamp | valuesCount | outliersCount | isOutlier
         final DataStream<FlaggedCountersResult> flaggedCountersResultDataStream1 = countersResultDataStream
                 .keyBy((KeySelector<CountersResult, String>) CountersResult::getUrn)
-                .window(TumblingEventTimeWindows.of(Time.minutes(60)))
+                .window(TumblingEventTimeWindows.of(Time.minutes(cfg.getOutliersOutliersInterval())))
                 .apply(new STDOutliersCountApplyWindowFunction());
 
         // KeyBy URN
@@ -140,7 +140,7 @@ public class ValueCountAndOutlierCountOutlierProcessor {
         // Create the CountersResult urn | timestamp | valuesCount | outliersCount
         final DataStream<CountersResult> countersResultDataStream2 = flaggedCountersResultDataStream1
                 .keyBy((KeySelector<FlaggedCountersResult, String>) FlaggedCountersResult::getUrn)
-                .window(TumblingEventTimeWindows.of(Time.minutes(60)))
+                .window(TumblingEventTimeWindows.of(Time.minutes(cfg.getOutliersOutliersInterval())))
                 .aggregate(new OutliersDetect2AggregateFunction(), new OutliersDetectProcessWindowFunction());
 
 /*
