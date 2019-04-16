@@ -16,7 +16,7 @@ public class STDOutliersCountApplyWindowFunction implements WindowFunction<Count
 
         DescriptiveStatistics descriptiveStatistics = new DescriptiveStatistics();
         for (CountersResult countersResult : input) {
-            descriptiveStatistics.addValue(countersResult.getOutliersCount());
+            descriptiveStatistics.addValue(countersResult.getValuesCountOutliersCount());
         }
         double std = descriptiveStatistics.getStandardDeviation();
         double lowerThreshold = descriptiveStatistics.getMean() - 2 * std;
@@ -24,8 +24,8 @@ public class STDOutliersCountApplyWindowFunction implements WindowFunction<Count
 
         input.forEach(cr -> {
             FlaggedCountersResult flaggedOutliersResult =
-                    new FlaggedCountersResult(cr.getUrn(), cr.getTimestamp(), cr.getCount(), cr.getOutliersCount());
-            if (cr.getOutliersCount() < lowerThreshold || cr.getOutliersCount() > upperThreshold) {
+                    new FlaggedCountersResult(cr.getUrn(), cr.getTimestamp(), cr.getValuesCount(), cr.getValuesCountOutliersCount());
+            if (cr.getValuesCountOutliersCount() < lowerThreshold || cr.getValuesCountOutliersCount() > upperThreshold) {
                 flaggedOutliersResult.setOutlier(true);
             }
             out.collect(flaggedOutliersResult);

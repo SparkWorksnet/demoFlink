@@ -24,7 +24,7 @@ import org.apache.flink.streaming.util.serialization.SimpleStringSchema;
 
 import java.util.concurrent.TimeUnit;
 
-public class ValueAndOutlierOutlierProcessor {
+public class ValueCountAndOutlierCountOutlierProcessor {
 
     public static void main(String[] args) throws Exception {
 

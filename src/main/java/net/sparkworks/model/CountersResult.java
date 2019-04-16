@@ -12,18 +12,24 @@ public class CountersResult {
 
     private long timestamp;
 
-    private long count;
-
-    private long outliersCount;
+    //in OutliersProcessor: counts the number of measurements
+    //in ValueCountAndOutlierCountOutlierProcessor: counts the number of 5minute intervals (first time around)
+    //in ValueCountAndOutlierCountOutlierProcessor: counts the number of outliers in 5minute intervals (second time around)
+    private long valuesCount;
+    
+    //in OutliersProcessor: counts the number of outliers in the time interval
+    //in ValueCountAndOutlierCountOutlierProcessor: counts the number of outliers in the values of the 5minute intervals (first time around)
+    //in ValueCountAndOutlierCountOutlierProcessor: counts the number of outliers in the outliers in 5minute intervals (second time around)
+    private long valuesCountOutliersCount;
 
     public CountersResult() {
     }
 
-    public CountersResult(String urn, long timestamp, long count, long outliersCount) {
+    public CountersResult(String urn, long timestamp, long valuesCount, long valuesCountOutliersCount) {
         this.urn = urn;
         this.timestamp = timestamp;
-        this.count = count;
-        this.outliersCount = outliersCount;
+        this.valuesCount = valuesCount;
+        this.valuesCountOutliersCount = valuesCountOutliersCount;
     }
 
     public String getUrn() {
@@ -42,20 +48,20 @@ public class CountersResult {
         this.timestamp = timestamp;
     }
 
-    public long getCount() {
-        return count;
+    public long getValuesCount() {
+        return valuesCount;
     }
 
-    public void setCount(long count) {
-        this.count = count;
+    public void setValuesCount(long valuesCount) {
+        this.valuesCount = valuesCount;
     }
 
-    public long getOutliersCount() {
-        return outliersCount;
+    public long getValuesCountOutliersCount() {
+        return valuesCountOutliersCount;
     }
 
-    public void setOutliersCount(long outliersCount) {
-        this.outliersCount = outliersCount;
+    public void setValuesCountOutliersCount(long valuesCountOutliersCount) {
+        this.valuesCountOutliersCount = valuesCountOutliersCount;
     }
 
     @Override
@@ -63,8 +69,8 @@ public class CountersResult {
         return "CountersResult{" +
                 "urn='" + urn + '\'' +
                 ", timestamp=" + timestamp +
-                ", count=" + count +
-                ", outliersCount=" + outliersCount +
+                ", valuesCount=" + valuesCount +
+                ", valuesCountOutliersCount=" + valuesCountOutliersCount +
                 '}';
     }
 
