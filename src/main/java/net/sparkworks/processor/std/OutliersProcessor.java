@@ -1,4 +1,4 @@
-package net.sparkworks.stream;
+package net.sparkworks.processor.std;
 
 import net.sparkworks.SparkConfiguration;
 import net.sparkworks.functions.OutliersDetectAggregateFunction;
@@ -24,7 +24,7 @@ import org.apache.flink.streaming.util.serialization.SimpleStringSchema;
 
 import java.util.concurrent.TimeUnit;
 
-public class STDOutliersDetectProcessor {
+public class OutliersProcessor {
 
     public static void main(String[] args) throws Exception {
 
