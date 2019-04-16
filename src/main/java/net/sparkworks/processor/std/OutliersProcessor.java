@@ -5,11 +5,12 @@ import net.sparkworks.functions.OutliersDetectAggregateFunction;
 import net.sparkworks.functions.OutliersDetectProcessWindowFunction;
 import net.sparkworks.functions.STDOutliersDetectApplyWindowFunction;
 import net.sparkworks.functions.SensorDataAscendingTimestampExtractor;
-import net.sparkworks.model.FlaggedSensorData;
 import net.sparkworks.model.CountersResult;
+import net.sparkworks.model.FlaggedSensorData;
 import net.sparkworks.model.SensorData;
 import net.sparkworks.out.RMQOut;
 import net.sparkworks.serialization.CountersResultSerializationSchema;
+import net.sparkworks.util.Config;
 import net.sparkworks.util.RBQueue;
 import org.apache.flink.api.common.JobExecutionResult;
 import org.apache.flink.api.common.functions.MapFunction;
@@ -27,8 +28,9 @@ import java.util.concurrent.TimeUnit;
 public class OutliersProcessor {
 
     public static void main(String[] args) throws Exception {
-
-
+    
+        Config cfg = new Config();
+        
         // The StreamExecutionEnvironment is the context in which a program is executed.
         // A local environment will cause execution in the current JVM,
         // a remote environment will cause execution on a remote cluster installation.
@@ -37,17 +39,17 @@ public class OutliersProcessor {
 
         // Setup the connection settings to the RabbitMQ broker
         final RMQConnectionConfig connectionConfig = new RMQConnectionConfig.Builder()
-                .setHost(SparkConfiguration.brokerHost)
-                .setPort(SparkConfiguration.brokerPort)
-                .setUserName(SparkConfiguration.username)
-                .setPassword(SparkConfiguration.password)
-                .setVirtualHost(SparkConfiguration.brokerVHost)
+                .setHost(cfg.getBrokerHost())
+                .setPort(cfg.getBrokerPort())
+                .setUserName(cfg.getBrokerUsername())
+                .setPassword(cfg.getBrokerPassword())
+                .setVirtualHost(cfg.getBrokerVHost())
                 .build();
 
         final DataStream<String> rawStream = env
                 .addSource(new RBQueue<String>(
                         connectionConfig,           // config for the RabbitMQ connection
-                        SparkConfiguration.queue,   // name of the RabbitMQ queue to consume
+                        cfg.getReadingsInputQueue(),   // name of the RabbitMQ queue to consume
                         true,        // use correlation ids; can be false if only at-least-once is required
                         new SimpleStringSchema()))  // deserialization schema to turn messages into Java objects
                 .setParallelism(1);                 // deserialization schema to turn messages into Java objects
@@ -116,9 +118,9 @@ public class OutliersProcessor {
 */
 
         // Output the results
-        if (SparkConfiguration.doOutput) {
-            countersResultDataStream.addSink(new RMQOut<CountersResult>(connectionConfig, SparkConfiguration.outExchange,
-                    SparkConfiguration.outRoutingKey5min, new CountersResultSerializationSchema()));
+        if (cfg.doOutput()) {
+            countersResultDataStream.addSink(new RMQOut<CountersResult>(connectionConfig, cfg.getAnalyticsOutputExchange(),
+                    Config.OUT_ROUTING_KEY_5_MIN, new CountersResultSerializationSchema()));
         }
 
         // Print the CountersResult
