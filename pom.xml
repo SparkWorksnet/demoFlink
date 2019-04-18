@@ -26,7 +26,7 @@
 
     <properties>
         <start-class>net.sparkworks.stream.StreamProcessor</start-class>
-        <flink.version>1.6.2</flink.version>
+        <flink.version>1.8.0</flink.version>
         <java.version>1.8</java.version>
         <maven.compiler.source>${java.version}</maven.compiler.source>
         <maven.compiler.target>${java.version}</maven.compiler.target>
@@ -39,18 +39,20 @@
             <groupId>org.apache.flink</groupId>
             <artifactId>flink-java</artifactId>
             <version>${flink.version}</version>
+            <scope>provided</scope>
         </dependency>
         <dependency>
             <groupId>org.apache.flink</groupId>
             <artifactId>flink-streaming-java_2.11</artifactId>
             <version>${flink.version}</version>
+            <scope>provided</scope>
         </dependency>
         <dependency>
             <groupId>org.apache.flink</groupId>
             <artifactId>flink-clients_2.11</artifactId>
             <version>${flink.version}</version>
+            <scope>provided</scope>
         </dependency>
-
         <dependency>
             <groupId>org.apache.flink</groupId>
             <artifactId>flink-connector-rabbitmq_2.11</artifactId>
@@ -166,7 +168,7 @@
                     </descriptorRefs>
                     <archive>
                         <manifest>
-                            <mainClass>net.sparkworks.batch.WindowProcessor</mainClass>
+                            <mainClass>net.sparkworks.processor.std.OutliersProcessor</mainClass>
                         </manifest>
                     </archive>
                 </configuration>

@@ -13,7 +13,7 @@ public class Config {
     
     public Config() {
         try {
-            prop.load(new FileReader("./flink.properties"));
+            prop.load(Thread.currentThread().getContextClassLoader().getResourceAsStream("flink.properties"));
         } catch (IOException e) {
             e.printStackTrace();
         }
