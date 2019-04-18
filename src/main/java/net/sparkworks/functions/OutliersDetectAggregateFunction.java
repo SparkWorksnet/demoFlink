@@ -22,7 +22,7 @@ public class OutliersDetectAggregateFunction implements AggregateFunction<Flagge
     public CountersResult getResult(OutliersDetectAccumulator accumulator) {
         final CountersResult countersResult = new CountersResult();
         countersResult.setValuesCount(accumulator.getCount());
-        countersResult.setValuesCountOutliersCount(accumulator.getOutlierCount());
+        countersResult.setOutliersCount(accumulator.getOutlierCount());
         return countersResult;
     }
 

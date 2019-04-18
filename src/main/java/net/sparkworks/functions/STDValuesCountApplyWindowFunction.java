@@ -24,7 +24,7 @@ public class STDValuesCountApplyWindowFunction implements WindowFunction<Counter
 
         input.forEach(cr -> {
             FlaggedCountersResult flaggedOutliersResult =
-                    new FlaggedCountersResult(cr.getUrn(), cr.getTimestamp(), cr.getValuesCount(), cr.getValuesCountOutliersCount());
+                    new FlaggedCountersResult(cr.getUrn(), cr.getTimestamp(), cr.getValuesCount(), cr.getOutliersCount());
             if (cr.getValuesCount() < lowerThreshold || cr.getValuesCount() > upperThreshold) {
                 flaggedOutliersResult.setOutlier(true);
             }

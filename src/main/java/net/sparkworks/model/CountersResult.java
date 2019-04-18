@@ -20,16 +20,16 @@ public class CountersResult {
     //in OutliersProcessor: counts the number of outliers in the time interval
     //in ValueCountAndOutlierCountOutlierProcessor: counts the number of outliers in the values of the 5minute intervals (first time around)
     //in ValueCountAndOutlierCountOutlierProcessor: counts the number of outliers in the outliers in 5minute intervals (second time around)
-    private long valuesCountOutliersCount;
+    private long outliersCount;
 
     public CountersResult() {
     }
 
-    public CountersResult(String urn, long timestamp, long valuesCount, long valuesCountOutliersCount) {
+    public CountersResult(String urn, long timestamp, long valuesCount, long outliersCount) {
         this.urn = urn;
         this.timestamp = timestamp;
         this.valuesCount = valuesCount;
-        this.valuesCountOutliersCount = valuesCountOutliersCount;
+        this.outliersCount = outliersCount;
     }
 
     public String getUrn() {
@@ -56,12 +56,12 @@ public class CountersResult {
         this.valuesCount = valuesCount;
     }
 
-    public long getValuesCountOutliersCount() {
-        return valuesCountOutliersCount;
+    public long getOutliersCount() {
+        return outliersCount;
     }
 
-    public void setValuesCountOutliersCount(long valuesCountOutliersCount) {
-        this.valuesCountOutliersCount = valuesCountOutliersCount;
+    public void setOutliersCount(long outliersCount) {
+        this.outliersCount = outliersCount;
     }
 
     @Override
@@ -70,7 +70,7 @@ public class CountersResult {
                 "urn='" + urn + '\'' +
                 ", timestamp=" + timestamp +
                 ", valuesCount=" + valuesCount +
-                ", valuesCountOutliersCount=" + valuesCountOutliersCount +
+                ", outliersCount=" + outliersCount +
                 '}';
     }
 

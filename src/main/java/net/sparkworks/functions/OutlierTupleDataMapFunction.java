@@ -8,6 +8,6 @@ public class OutlierTupleDataMapFunction implements MapFunction<CountersResult, 
 
     public Tuple4<String, Long, Long, Long> map(CountersResult countersResult) {
         return Tuple4.of(countersResult.getUrn(), countersResult.getTimestamp(), countersResult.getValuesCount(),
-                countersResult.getValuesCountOutliersCount());
+                countersResult.getOutliersCount());
     }
 }
