@@ -1,10 +1,10 @@
 package net.sparkworks.model;
 
-public class FlaggedCountersResult extends CountersResult {
+public class FlaggedOutliersResult extends OutliersResult {
 
     private boolean isOutlier;
 
-    public FlaggedCountersResult(String urn, long timestamp, long count, long outliersCount) {
+    public FlaggedOutliersResult(String urn, long timestamp, long count, long outliersCount) {
         super(urn, timestamp, count, outliersCount);
     }
 

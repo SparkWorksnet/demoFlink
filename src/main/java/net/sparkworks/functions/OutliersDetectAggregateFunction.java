@@ -1,10 +1,10 @@
 package net.sparkworks.functions;
 
-import net.sparkworks.model.CountersResult;
+import net.sparkworks.model.OutliersResult;
 import net.sparkworks.model.FlaggedSensorData;
 import org.apache.flink.api.common.functions.AggregateFunction;
 
-public class OutliersDetectAggregateFunction implements AggregateFunction<FlaggedSensorData, OutliersDetectAccumulator, CountersResult> {
+public class OutliersDetectAggregateFunction implements AggregateFunction<FlaggedSensorData, OutliersDetectAccumulator, OutliersResult> {
 
     @Override
     public OutliersDetectAccumulator createAccumulator() {
@@ -19,11 +19,11 @@ public class OutliersDetectAggregateFunction implements AggregateFunction<Flagge
     }
 
     @Override
-    public CountersResult getResult(OutliersDetectAccumulator accumulator) {
-        final CountersResult countersResult = new CountersResult();
-        countersResult.setValuesCount(accumulator.getCount());
-        countersResult.setOutliersCount(accumulator.getOutlierCount());
-        return countersResult;
+    public OutliersResult getResult(OutliersDetectAccumulator accumulator) {
+        final OutliersResult outliersResult = new OutliersResult();
+        outliersResult.setValuesCount(accumulator.getCount());
+        outliersResult.setOutliersCount(accumulator.getOutlierCount());
+        return outliersResult;
     }
 
     @Override

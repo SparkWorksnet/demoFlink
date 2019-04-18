@@ -1,6 +1,6 @@
 package net.sparkworks.serialization;
 
-import net.sparkworks.model.CountersResult;
+import net.sparkworks.model.OutliersResult;
 import org.apache.flink.api.common.serialization.SerializationSchema;
 import org.apache.flink.shaded.jackson2.com.fasterxml.jackson.core.JsonGenerationException;
 import org.apache.flink.shaded.jackson2.com.fasterxml.jackson.databind.JsonMappingException;
@@ -8,9 +8,9 @@ import org.apache.flink.shaded.jackson2.com.fasterxml.jackson.databind.ObjectMap
 
 import java.io.IOException;
 
-public class CountersResultSerializationSchema implements SerializationSchema<CountersResult> {
+public class CountersResultSerializationSchema implements SerializationSchema<OutliersResult> {
 
-    public byte[] serialize(final CountersResult element) {
+    public byte[] serialize(final OutliersResult element) {
 
         ObjectMapper mapper = new ObjectMapper();
         String jsonInString = "";

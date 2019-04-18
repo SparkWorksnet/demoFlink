@@ -1,13 +1,12 @@
 package net.sparkworks.processor.std;
 
-import net.sparkworks.SparkConfiguration;
 import net.sparkworks.functions.OutliersDetect2AggregateFunction;
 import net.sparkworks.functions.OutliersDetectProcessWindowFunction;
 import net.sparkworks.functions.OutliersDetectionDataAscendingTimestampExtractor;
 import net.sparkworks.functions.STDOutliersCountApplyWindowFunction;
 import net.sparkworks.functions.STDValuesCountApplyWindowFunction;
-import net.sparkworks.model.FlaggedCountersResult;
-import net.sparkworks.model.CountersResult;
+import net.sparkworks.model.FlaggedOutliersResult;
+import net.sparkworks.model.OutliersResult;
 import net.sparkworks.out.RMQOut;
 import net.sparkworks.serialization.CountersResultSerializationSchema;
 import net.sparkworks.util.Config;
@@ -87,25 +86,25 @@ public class ValueCountAndOutlierCountOutlierProcessor {
         final DataStream<String> rawStream = env.readTextFile(filename);
 */
 
-        // Turn String into CountersResult urn | timestamp | valuesCount | outliersCount
-        DataStream<CountersResult> countersResultDataStream = rawStream
-                .map((MapFunction<String, CountersResult>) CountersResult::fromString)
+        // Turn String into OutliersResult urn | timestamp | valuesCount | outliersCount
+        DataStream<OutliersResult> countersResultDataStream = rawStream
+                .map((MapFunction<String, OutliersResult>) OutliersResult::fromString)
                 .assignTimestampsAndWatermarks(new OutliersDetectionDataAscendingTimestampExtractor());
 
         // KeyBy URN
         // 60' window
         // Detect the outliers on the valuesCount and flag them
-        // Turn the CountersResult into FlaggedCountersResult urn | timestamp | valuesCount | outliersCount | isOutlier
-        final DataStream<FlaggedCountersResult> flaggedCountersResultDataStream = countersResultDataStream
-                .keyBy((KeySelector<CountersResult, String>) CountersResult::getUrn)
+        // Turn the OutliersResult into FlaggedOutliersResult urn | timestamp | valuesCount | outliersCount | isOutlier
+        final DataStream<FlaggedOutliersResult> flaggedCountersResultDataStream = countersResultDataStream
+                .keyBy((KeySelector<OutliersResult, String>) OutliersResult::getUrn)
                 .window(TumblingEventTimeWindows.of(Time.minutes(cfg.getOutliersOutliersInterval())))
                 .apply(new STDValuesCountApplyWindowFunction());
 
         // KeyBy URN
         // 60' window
-        // Create the CountersResult urn | timestamp | valuesCount | outliersCount
-        final DataStream<CountersResult> countersResultDataStream1 = flaggedCountersResultDataStream
-                .keyBy((KeySelector<FlaggedCountersResult, String>) FlaggedCountersResult::getUrn)
+        // Create the OutliersResult urn | timestamp | valuesCount | outliersCount
+        final DataStream<OutliersResult> countersResultDataStream1 = flaggedCountersResultDataStream
+                .keyBy((KeySelector<FlaggedOutliersResult, String>) FlaggedOutliersResult::getUrn)
                 .window(TumblingEventTimeWindows.of(Time.minutes(cfg.getOutliersOutliersInterval())))
                 .aggregate(new OutliersDetect2AggregateFunction(), new OutliersDetectProcessWindowFunction());
 
@@ -119,27 +118,27 @@ public class ValueCountAndOutlierCountOutlierProcessor {
 
         // Output the results
         if (cfg.doOutput()) {
-            countersResultDataStream1.addSink(new RMQOut<CountersResult>(connectionConfig, cfg.getAnalyticsOutputExchange(),
+            countersResultDataStream1.addSink(new RMQOut<OutliersResult>(connectionConfig, cfg.getAnalyticsOutputExchange(),
                     Config.OUT_ROUTING_KEY_VALUES_60_MIN, new CountersResultSerializationSchema()));
         }
 
-        // Print the CountersResult
+        // Print the OutliersResult
         countersResultDataStream1.print();
 
         // KeyBy URN
         // 60' window
         // Detect the outliers on the outliersCount and flag them
-        // Turn the CountersResult into FlaggedCountersResult urn | timestamp | valuesCount | outliersCount | isOutlier
-        final DataStream<FlaggedCountersResult> flaggedCountersResultDataStream1 = countersResultDataStream
-                .keyBy((KeySelector<CountersResult, String>) CountersResult::getUrn)
+        // Turn the OutliersResult into FlaggedOutliersResult urn | timestamp | valuesCount | outliersCount | isOutlier
+        final DataStream<FlaggedOutliersResult> flaggedCountersResultDataStream1 = countersResultDataStream
+                .keyBy((KeySelector<OutliersResult, String>) OutliersResult::getUrn)
                 .window(TumblingEventTimeWindows.of(Time.minutes(cfg.getOutliersOutliersInterval())))
                 .apply(new STDOutliersCountApplyWindowFunction());
 
         // KeyBy URN
         // 60' window
-        // Create the CountersResult urn | timestamp | valuesCount | outliersCount
-        final DataStream<CountersResult> countersResultDataStream2 = flaggedCountersResultDataStream1
-                .keyBy((KeySelector<FlaggedCountersResult, String>) FlaggedCountersResult::getUrn)
+        // Create the OutliersResult urn | timestamp | valuesCount | outliersCount
+        final DataStream<OutliersResult> countersResultDataStream2 = flaggedCountersResultDataStream1
+                .keyBy((KeySelector<FlaggedOutliersResult, String>) FlaggedOutliersResult::getUrn)
                 .window(TumblingEventTimeWindows.of(Time.minutes(cfg.getOutliersOutliersInterval())))
                 .aggregate(new OutliersDetect2AggregateFunction(), new OutliersDetectProcessWindowFunction());
 
@@ -153,11 +152,11 @@ public class ValueCountAndOutlierCountOutlierProcessor {
 
         // Output the results
         if (cfg.doOutput()) {
-            countersResultDataStream2.addSink(new RMQOut<CountersResult>(connectionConfig, cfg.getAnalyticsOutputExchange(),
+            countersResultDataStream2.addSink(new RMQOut<OutliersResult>(connectionConfig, cfg.getAnalyticsOutputExchange(),
                     Config.OUT_ROUTING_KEY_OUTLIERS_60_MIN, new CountersResultSerializationSchema()));
         }
 
-        // Print the CountersResult
+        // Print the OutliersResult
         countersResultDataStream2.print();
         final JobExecutionResult jobExecutionResult = env.execute("SparkWorks Window Processor");
 

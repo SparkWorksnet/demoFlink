@@ -1,10 +1,10 @@
 package net.sparkworks.functions;
 
-import net.sparkworks.model.CountersResult;
-import net.sparkworks.model.FlaggedCountersResult;
+import net.sparkworks.model.FlaggedOutliersResult;
+import net.sparkworks.model.OutliersResult;
 import org.apache.flink.api.common.functions.AggregateFunction;
 
-public class OutliersDetect2AggregateFunction implements AggregateFunction<FlaggedCountersResult, OutliersDetectAccumulator, CountersResult> {
+public class OutliersDetect2AggregateFunction implements AggregateFunction<FlaggedOutliersResult, OutliersDetectAccumulator, OutliersResult> {
 
     @Override
     public OutliersDetectAccumulator createAccumulator() {
@@ -12,18 +12,18 @@ public class OutliersDetect2AggregateFunction implements AggregateFunction<Flagg
     }
 
     @Override
-    public OutliersDetectAccumulator add(FlaggedCountersResult value, OutliersDetectAccumulator accumulator) {
+    public OutliersDetectAccumulator add(FlaggedOutliersResult value, OutliersDetectAccumulator accumulator) {
         accumulator.addValue();
         if (value.isOutlier()) accumulator.addOutlierValue();
         return accumulator;
     }
 
     @Override
-    public CountersResult getResult(OutliersDetectAccumulator accumulator) {
-        final CountersResult countersResult = new CountersResult();
-        countersResult.setValuesCount(accumulator.getCount());
-        countersResult.setOutliersCount(accumulator.getOutlierCount());
-        return countersResult;
+    public OutliersResult getResult(OutliersDetectAccumulator accumulator) {
+        final OutliersResult outliersResult = new OutliersResult();
+        outliersResult.setValuesCount(accumulator.getCount());
+        outliersResult.setOutliersCount(accumulator.getOutlierCount());
+        return outliersResult;
     }
 
     @Override

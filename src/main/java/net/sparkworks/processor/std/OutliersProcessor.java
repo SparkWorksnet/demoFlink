@@ -1,11 +1,10 @@
 package net.sparkworks.processor.std;
 
-import net.sparkworks.SparkConfiguration;
 import net.sparkworks.functions.OutliersDetectAggregateFunction;
 import net.sparkworks.functions.OutliersDetectProcessWindowFunction;
 import net.sparkworks.functions.STDOutliersDetectApplyWindowFunction;
 import net.sparkworks.functions.SensorDataAscendingTimestampExtractor;
-import net.sparkworks.model.CountersResult;
+import net.sparkworks.model.OutliersResult;
 import net.sparkworks.model.FlaggedSensorData;
 import net.sparkworks.model.SensorData;
 import net.sparkworks.out.RMQOut;
@@ -103,8 +102,8 @@ public class OutliersProcessor {
 
         // KeyBy URN
         // 5' window
-        // Create the CountersResult urn | timestamp | valuesCount | outliersCount
-        final DataStream<CountersResult> countersResultDataStream = flaggedSensorDataDataStream
+        // Create the OutliersResult urn | timestamp | valuesCount | outliersCount
+        final DataStream<OutliersResult> countersResultDataStream = flaggedSensorDataDataStream
                 .keyBy((KeySelector<FlaggedSensorData, String>) FlaggedSensorData::getUrn)
                 .window(TumblingEventTimeWindows.of(Time.minutes(cfg.getOutliersInterval())))
                 .aggregate(new OutliersDetectAggregateFunction(), new OutliersDetectProcessWindowFunction());
@@ -119,11 +118,11 @@ public class OutliersProcessor {
 
         // Output the results
         if (cfg.doOutput()) {
-            countersResultDataStream.addSink(new RMQOut<CountersResult>(connectionConfig, cfg.getAnalyticsOutputExchange(),
+            countersResultDataStream.addSink(new RMQOut<OutliersResult>(connectionConfig, cfg.getAnalyticsOutputExchange(),
                     Config.OUT_ROUTING_KEY_5_MIN, new CountersResultSerializationSchema()));
         }
 
-        // Print the CountersResult
+        // Print the OutliersResult
         countersResultDataStream.print();
         final JobExecutionResult jobExecutionResult = env.execute("SparkWorks Window Processor");
 

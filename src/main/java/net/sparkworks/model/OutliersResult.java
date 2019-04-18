@@ -6,7 +6,7 @@ import org.apache.flink.shaded.jackson2.com.fasterxml.jackson.databind.ObjectMap
 
 import java.io.IOException;
 
-public class CountersResult {
+public class OutliersResult {
 
     private String urn;
 
@@ -21,11 +21,13 @@ public class CountersResult {
     //in ValueCountAndOutlierCountOutlierProcessor: counts the number of outliers in the values of the 5minute intervals (first time around)
     //in ValueCountAndOutlierCountOutlierProcessor: counts the number of outliers in the outliers in 5minute intervals (second time around)
     private long outliersCount;
+    private long outliersOnValuesCount;
+    private long outliersOnOutliersCount;
 
-    public CountersResult() {
+    public OutliersResult() {
     }
 
-    public CountersResult(String urn, long timestamp, long valuesCount, long outliersCount) {
+    public OutliersResult(String urn, long timestamp, long valuesCount, long outliersCount) {
         this.urn = urn;
         this.timestamp = timestamp;
         this.valuesCount = valuesCount;
@@ -66,7 +68,7 @@ public class CountersResult {
 
     @Override
     public String toString() {
-        return "CountersResult{" +
+        return "OutliersResult{" +
                 "urn='" + urn + '\'' +
                 ", timestamp=" + timestamp +
                 ", valuesCount=" + valuesCount +
@@ -74,12 +76,12 @@ public class CountersResult {
                 '}';
     }
 
-    public static CountersResult fromString(String line) {
+    public static OutliersResult fromString(String line) {
 
         ObjectMapper mapper = new ObjectMapper();
-        CountersResult countersResult = new CountersResult();
+        OutliersResult outliersResult = new OutliersResult();
         try {
-            countersResult = mapper.readValue(line, CountersResult.class);
+            outliersResult = mapper.readValue(line, OutliersResult.class);
         } catch (JsonGenerationException e) {
             e.printStackTrace();
         } catch (JsonMappingException e) {
@@ -87,6 +89,6 @@ public class CountersResult {
         } catch (IOException e) {
             e.printStackTrace();
         }
-        return countersResult;
+        return outliersResult;
     }
 }
