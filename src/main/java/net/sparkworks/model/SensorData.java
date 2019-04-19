@@ -1,12 +1,21 @@
 package net.sparkworks.model;
 
-import java.util.Date;
+import lombok.AllArgsConstructor;
+import lombok.Getter;
+import lombok.NoArgsConstructor;
+import lombok.Setter;
+import lombok.ToString;
 
 /**
  * POJO object for a SensorData single value.
  *
  * @author ichatz@gmail.com
  */
+@Getter
+@Setter
+@ToString
+@NoArgsConstructor
+@AllArgsConstructor
 public class SensorData {
 
     private String urn;
@@ -15,48 +24,6 @@ public class SensorData {
 
     private long timestamp;
 
-    public SensorData() {
-    }
-
-    public SensorData(String urn, double value, long timestamp) {
-        this.urn = urn;
-        this.value = value;
-        this.timestamp = timestamp;
-    }
-
-    public String getUrn() {
-        return urn;
-    }
-
-    public void setUrn(String urn) {
-        this.urn = urn;
-    }
-
-    public double getValue() {
-        return value;
-    }
-
-    public void setValue(double value) {
-        this.value = value;
-    }
-
-    public long getTimestamp() {
-        return timestamp;
-    }
-
-    public void setTimestamp(long timestamp) {
-        this.timestamp = timestamp;
-    }
-
-    @Override
-    public String toString() {
-        return "SensorData{" +
-                "urn='" + urn + '\'' +
-                ", value=" + value +
-                ", time=" + new Date(timestamp) +
-                '}';
-    }
-    
     public static SensorData fromString(String line) {
         
         String[] tokens = line.split("(,|;)\\s*");

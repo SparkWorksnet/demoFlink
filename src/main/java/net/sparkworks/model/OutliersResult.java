@@ -1,12 +1,19 @@
 package net.sparkworks.model;
 
-import org.apache.flink.shaded.jackson2.com.fasterxml.jackson.annotation.JsonInclude;
+import lombok.Getter;
+import lombok.NoArgsConstructor;
+import lombok.Setter;
+import lombok.ToString;
 import org.apache.flink.shaded.jackson2.com.fasterxml.jackson.core.JsonGenerationException;
 import org.apache.flink.shaded.jackson2.com.fasterxml.jackson.databind.JsonMappingException;
 import org.apache.flink.shaded.jackson2.com.fasterxml.jackson.databind.ObjectMapper;
 
 import java.io.IOException;
 
+@Getter
+@Setter
+@ToString
+@NoArgsConstructor
 public class OutliersResult {
 
     private String urn;
@@ -29,74 +36,11 @@ public class OutliersResult {
     // (second time around)
     private long outliersOnOutliersCount;
 
-    public OutliersResult() {
-    }
-
     public OutliersResult(String urn, long timestamp, long valuesCount, long outliersCount) {
         this.urn = urn;
         this.timestamp = timestamp;
         this.valuesCount = valuesCount;
         this.outliersCount = outliersCount;
-    }
-
-    public String getUrn() {
-        return urn;
-    }
-
-    public void setUrn(String urn) {
-        this.urn = urn;
-    }
-
-    public long getTimestamp() {
-        return timestamp;
-    }
-
-    public void setTimestamp(long timestamp) {
-        this.timestamp = timestamp;
-    }
-
-    public long getValuesCount() {
-        return valuesCount;
-    }
-
-    public void setValuesCount(long valuesCount) {
-        this.valuesCount = valuesCount;
-    }
-
-    public long getOutliersCount() {
-        return outliersCount;
-    }
-
-    public void setOutliersCount(long outliersCount) {
-        this.outliersCount = outliersCount;
-    }
-
-    public long getOutliersOnValuesCount() {
-        return outliersOnValuesCount;
-    }
-
-    public void setOutliersOnValuesCount(long outliersOnValuesCount) {
-        this.outliersOnValuesCount = outliersOnValuesCount;
-    }
-
-    public long getOutliersOnOutliersCount() {
-        return outliersOnOutliersCount;
-    }
-
-    public void setOutliersOnOutliersCount(long outliersOnOutliersCount) {
-        this.outliersOnOutliersCount = outliersOnOutliersCount;
-    }
-
-    @Override
-    public String toString() {
-        return "OutliersResult{" +
-                "urn='" + urn + '\'' +
-                ", timestamp=" + timestamp +
-                ", valuesCount=" + valuesCount +
-                ", outliersCount=" + outliersCount +
-                ", outliersOnValuesCount=" + outliersOnValuesCount +
-                ", outliersOnOutliersCount=" + outliersOnOutliersCount +
-                '}';
     }
 
     public static OutliersResult fromString(String line) {
