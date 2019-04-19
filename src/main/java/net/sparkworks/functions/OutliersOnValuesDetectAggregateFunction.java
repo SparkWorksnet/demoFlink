@@ -4,7 +4,7 @@ import net.sparkworks.model.FlaggedOutliersResult;
 import net.sparkworks.model.OutliersResult;
 import org.apache.flink.api.common.functions.AggregateFunction;
 
-public class OutliersDetect2AggregateFunction implements AggregateFunction<FlaggedOutliersResult, OutliersDetectAccumulator, OutliersResult> {
+public class OutliersOnValuesDetectAggregateFunction implements AggregateFunction<FlaggedOutliersResult, OutliersDetectAccumulator, OutliersResult> {
 
     @Override
     public OutliersDetectAccumulator createAccumulator() {
@@ -22,7 +22,7 @@ public class OutliersDetect2AggregateFunction implements AggregateFunction<Flagg
     public OutliersResult getResult(OutliersDetectAccumulator accumulator) {
         final OutliersResult outliersResult = new OutliersResult();
         outliersResult.setValuesCount(accumulator.getCount());
-        outliersResult.setOutliersCount(accumulator.getOutlierCount());
+        outliersResult.setOutliersOnValuesCount(accumulator.getOutlierCount());
         return outliersResult;
     }
 

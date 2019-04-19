@@ -8,7 +8,7 @@ import net.sparkworks.model.OutliersResult;
 import net.sparkworks.model.FlaggedSensorData;
 import net.sparkworks.model.SensorData;
 import net.sparkworks.out.RMQOut;
-import net.sparkworks.serialization.CountersResultSerializationSchema;
+import net.sparkworks.serialization.OutliersSerializationSchema;
 import net.sparkworks.util.Config;
 import net.sparkworks.util.RBQueue;
 import org.apache.flink.api.common.JobExecutionResult;
@@ -119,7 +119,7 @@ public class OutliersProcessor {
         // Output the results
         if (cfg.doOutput()) {
             countersResultDataStream.addSink(new RMQOut<OutliersResult>(connectionConfig, cfg.getAnalyticsOutputExchange(),
-                    Config.OUT_ROUTING_KEY_5_MIN, new CountersResultSerializationSchema()));
+                    Config.OUT_ROUTING_KEY_5_MIN, new OutliersSerializationSchema()));
         }
 
         // Print the OutliersResult

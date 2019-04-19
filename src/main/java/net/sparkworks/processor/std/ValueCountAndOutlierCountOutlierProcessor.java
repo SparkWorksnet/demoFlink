@@ -1,6 +1,7 @@
 package net.sparkworks.processor.std;
 
-import net.sparkworks.functions.OutliersDetect2AggregateFunction;
+import net.sparkworks.functions.OutliersOnValuesDetectAggregateFunction;
+import net.sparkworks.functions.OutliersOnOutliersDetectAggregateFunction;
 import net.sparkworks.functions.OutliersDetectProcessWindowFunction;
 import net.sparkworks.functions.OutliersDetectionDataAscendingTimestampExtractor;
 import net.sparkworks.functions.STDOutliersCountApplyWindowFunction;
@@ -8,7 +9,8 @@ import net.sparkworks.functions.STDValuesCountApplyWindowFunction;
 import net.sparkworks.model.FlaggedOutliersResult;
 import net.sparkworks.model.OutliersResult;
 import net.sparkworks.out.RMQOut;
-import net.sparkworks.serialization.CountersResultSerializationSchema;
+import net.sparkworks.serialization.OutliersOnOutliersSerializationSchema;
+import net.sparkworks.serialization.OutliersOnValuesSerializationSchema;
 import net.sparkworks.util.Config;
 import net.sparkworks.util.RBQueue;
 import org.apache.flink.api.common.JobExecutionResult;
@@ -47,11 +49,11 @@ public class ValueCountAndOutlierCountOutlierProcessor {
 
         final DataStream<String> rawStream = env
                 .addSource(new RBQueue<String>(
-                        connectionConfig,           // config for the RabbitMQ connection
+                        connectionConfig,                  // config for the RabbitMQ connection
                         cfg.getOutliersInputQueue5Min(),   // name of the RabbitMQ queue to consume
-                        true,        // use correlation ids; can be false if only at-least-once is required
-                        new SimpleStringSchema()))  // deserialization schema to turn messages into Java objects
-                .setParallelism(1);                 // deserialization schema to turn messages into Java objects
+                        true,               // use correlation ids; can be false if only at-least-once is required
+                        new SimpleStringSchema()))         // deserialization schema to turn messages into Java objects
+                .setParallelism(1);                        // deserialization schema to turn messages into Java objects
 
 /*
         // Read from .csv
@@ -106,7 +108,7 @@ public class ValueCountAndOutlierCountOutlierProcessor {
         final DataStream<OutliersResult> countersResultDataStream1 = flaggedCountersResultDataStream
                 .keyBy((KeySelector<FlaggedOutliersResult, String>) FlaggedOutliersResult::getUrn)
                 .window(TumblingEventTimeWindows.of(Time.minutes(cfg.getOutliersOutliersInterval())))
-                .aggregate(new OutliersDetect2AggregateFunction(), new OutliersDetectProcessWindowFunction());
+                .aggregate(new OutliersOnValuesDetectAggregateFunction(), new OutliersDetectProcessWindowFunction());
 
 /*
         // Write the results in the csv
@@ -119,7 +121,7 @@ public class ValueCountAndOutlierCountOutlierProcessor {
         // Output the results
         if (cfg.doOutput()) {
             countersResultDataStream1.addSink(new RMQOut<OutliersResult>(connectionConfig, cfg.getAnalyticsOutputExchange(),
-                    Config.OUT_ROUTING_KEY_VALUES_60_MIN, new CountersResultSerializationSchema()));
+                    Config.OUT_ROUTING_KEY_VALUES_60_MIN, new OutliersOnValuesSerializationSchema()));
         }
 
         // Print the OutliersResult
@@ -140,7 +142,7 @@ public class ValueCountAndOutlierCountOutlierProcessor {
         final DataStream<OutliersResult> countersResultDataStream2 = flaggedCountersResultDataStream1
                 .keyBy((KeySelector<FlaggedOutliersResult, String>) FlaggedOutliersResult::getUrn)
                 .window(TumblingEventTimeWindows.of(Time.minutes(cfg.getOutliersOutliersInterval())))
-                .aggregate(new OutliersDetect2AggregateFunction(), new OutliersDetectProcessWindowFunction());
+                .aggregate(new OutliersOnOutliersDetectAggregateFunction(), new OutliersDetectProcessWindowFunction());
 
 /*
         // Write the results in the csv
@@ -153,7 +155,7 @@ public class ValueCountAndOutlierCountOutlierProcessor {
         // Output the results
         if (cfg.doOutput()) {
             countersResultDataStream2.addSink(new RMQOut<OutliersResult>(connectionConfig, cfg.getAnalyticsOutputExchange(),
-                    Config.OUT_ROUTING_KEY_OUTLIERS_60_MIN, new CountersResultSerializationSchema()));
+                    Config.OUT_ROUTING_KEY_OUTLIERS_60_MIN, new OutliersOnOutliersSerializationSchema()));
         }
 
         // Print the OutliersResult

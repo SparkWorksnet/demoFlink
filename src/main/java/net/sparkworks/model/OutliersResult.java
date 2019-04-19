@@ -1,5 +1,6 @@
 package net.sparkworks.model;
 
+import org.apache.flink.shaded.jackson2.com.fasterxml.jackson.annotation.JsonInclude;
 import org.apache.flink.shaded.jackson2.com.fasterxml.jackson.core.JsonGenerationException;
 import org.apache.flink.shaded.jackson2.com.fasterxml.jackson.databind.JsonMappingException;
 import org.apache.flink.shaded.jackson2.com.fasterxml.jackson.databind.ObjectMapper;
@@ -14,14 +15,18 @@ public class OutliersResult {
 
     //in OutliersProcessor: counts the number of measurements
     //in ValueCountAndOutlierCountOutlierProcessor: counts the number of 5minute intervals (first time around)
-    //in ValueCountAndOutlierCountOutlierProcessor: counts the number of outliers in 5minute intervals (second time around)
     private long valuesCount;
     
     //in OutliersProcessor: counts the number of outliers in the time interval
-    //in ValueCountAndOutlierCountOutlierProcessor: counts the number of outliers in the values of the 5minute intervals (first time around)
-    //in ValueCountAndOutlierCountOutlierProcessor: counts the number of outliers in the outliers in 5minute intervals (second time around)
+    //in ValueCountAndOutlierCountOutlierProcessor (second time): counts the number of measurements
     private long outliersCount;
+
+    // in ValueCountAndOutlierCountOutlierProcessor: counts the number of outliers in the values of the 5minute intervals
+    // (first time around)
     private long outliersOnValuesCount;
+
+    // in ValueCountAndOutlierCountOutlierProcessor: counts the number of outliers in the outliers in 5minute intervals
+    // (second time around)
     private long outliersOnOutliersCount;
 
     public OutliersResult() {
@@ -66,6 +71,22 @@ public class OutliersResult {
         this.outliersCount = outliersCount;
     }
 
+    public long getOutliersOnValuesCount() {
+        return outliersOnValuesCount;
+    }
+
+    public void setOutliersOnValuesCount(long outliersOnValuesCount) {
+        this.outliersOnValuesCount = outliersOnValuesCount;
+    }
+
+    public long getOutliersOnOutliersCount() {
+        return outliersOnOutliersCount;
+    }
+
+    public void setOutliersOnOutliersCount(long outliersOnOutliersCount) {
+        this.outliersOnOutliersCount = outliersOnOutliersCount;
+    }
+
     @Override
     public String toString() {
         return "OutliersResult{" +
@@ -73,6 +94,8 @@ public class OutliersResult {
                 ", timestamp=" + timestamp +
                 ", valuesCount=" + valuesCount +
                 ", outliersCount=" + outliersCount +
+                ", outliersOnValuesCount=" + outliersOnValuesCount +
+                ", outliersOnOutliersCount=" + outliersOnOutliersCount +
                 '}';
     }
 
