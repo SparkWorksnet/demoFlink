@@ -30,13 +30,7 @@ public class RBQueue<OUT>
     }
 
     protected void setupQueue() throws IOException {
-        Map args = new HashMap();
-        args.put("x-message-ttl", 10000);
-
-        this.channel.queueDeclare(this.queueName,
-                true,
-                false,
-                false, args);
+        this.channel.queueDeclarePassive(this.queueName);
     }
 
 }
