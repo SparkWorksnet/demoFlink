@@ -176,7 +176,7 @@
                     </descriptorRefs>
                     <archive>
                         <manifest>
-                            <mainClass>net.sparkworks.processor.std.OutliersProcessor</mainClass>
+                            <mainClass>net.sparkworks.stream.SparksProcessor</mainClass>
                         </manifest>
                     </archive>
                 </configuration>
